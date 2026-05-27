@@ -26,14 +26,15 @@ provider "aws" {
 
   default_tags {
     tags = {
-      Project     = var.project_name
-      Environment = var.environment
+      Project     = "W7Capstone"
+      Team        = "G9"
+      Owner       = "Dinh"
+      Environment = "hackathon"
       ManagedBy   = "Terraform"
-      Owner       = "Group9"
-      CostCenter  = "Hackathon-W7"
     }
   }
 }
+
 
 # -----------------------------------------------------------------------------
 # RELATIONAL DATABASE (PostgreSQL - Thay thế DynamoDB theo chuẩn kiến trúc cũ)
