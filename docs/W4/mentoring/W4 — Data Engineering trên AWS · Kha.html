@@ -1,0 +1,2273 @@
+<!DOCTYPE html>
+<html lang="vi"><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>W4 — Data Engineering trên AWS · Kha</title>
+
+<!-- === TYPOGRAPHY: Plus Jakarta Sans per TechX brand === -->
+<link rel="preconnect" href="https://fonts.googleapis.com/">
+<link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="">
+<link href="W4%20%E2%80%94%20Data%20Engineering%20tr%C3%AAn%20AWS%20%C2%B7%20Kha_files/css2.css" rel="stylesheet">
+
+<style>
+/* ===========================================
+   DESIGN TOKENS — TechX brand
+   =========================================== */
+:root {
+    /* Brand colors */
+    --brand-orange: #fe7624;
+    --brand-orange-light: #f59120;
+    --brand-amber: #fbae42;
+    --brand-amber-mid: #fdc57a;
+    --brand-yellow: #fcd554;
+    --brand-yellow-light: #ffd54c;
+    --brand-navy: #1e293b;
+    --brand-navy-mid: #24338a;
+    --brand-blue: #007bc1;
+    --brand-cyan: #00b3d9;
+    --brand-blue-bright: #0283e5;
+
+    /* Neutrals */
+    --text-primary: #1a1a1a;
+    --text-secondary: #4d4e4e;
+    --text-muted: #698695;
+    --border: #c4d5dd;
+    --border-light: #ebebeb;
+
+    /* Surfaces */
+    --surface-white: #ffffff;
+    --surface-100: #fafafa;
+    --surface-card: #f9fafb;
+    --surface-warm: #f0eeed;
+    --surface-blue: #e3f0f7;
+    --surface-tint: #fff7ec;
+
+    /* Typography */
+    --font-sans: 'Plus Jakarta Sans', -apple-system, sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+    /* Fluid scale using clamp */
+    --title-size: clamp(2rem, 5.5vw, 4.25rem);
+    --h2-size: clamp(1.5rem, 3.5vw, 2.5rem);
+    --h3-size: clamp(1.1rem, 2.2vw, 1.6rem);
+    --body-size: clamp(0.8rem, 1.15vw, 1.05rem);
+    --small-size: clamp(0.7rem, 0.9vw, 0.85rem);
+    --mono-size: clamp(0.65rem, 0.9vw, 0.85rem);
+
+    /* Spacing */
+    --slide-padding: clamp(1.5rem, 4vw, 4rem);
+    --content-gap: clamp(0.75rem, 1.8vw, 1.8rem);
+    --element-gap: clamp(0.4rem, 1vw, 1rem);
+
+    /* Radius */
+    --radius-sm: 10px;
+    --radius-md: 16px;
+    --radius-lg: 20px;
+    --radius-xl: 32px;
+    --radius-pill: 80px;
+
+    /* Shadow */
+    --shadow-card: 0 8px 17px rgba(29, 29, 29, 0.05);
+    --shadow-lg: 0 20px 40px rgba(30, 41, 59, 0.12);
+
+    /* Gradients */
+    --gradient-cta: linear-gradient(135deg, #ffc078 0%, #ff8800 100%);
+    --gradient-warm: linear-gradient(135deg, #fcd554 0%, #fe7624 60%, #f59120 100%);
+    --gradient-overlay: linear-gradient(180deg, #ffffff00 0%, #ffd6a233 100%);
+    --gradient-cool: linear-gradient(135deg, #007bc1 0%, #24338a 100%);
+
+    /* Motion */
+    --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+    --duration-normal: 0.65s;
+}
+
+/* ===========================================
+   RESET + BASE
+   =========================================== */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+    height: 100%;
+    overflow-x: hidden;
+    font-family: var(--font-sans);
+    color: var(--text-primary);
+    background: var(--surface-100);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+html {
+    scroll-snap-type: y mandatory;
+    scroll-behavior: smooth;
+}
+
+/* ===========================================
+   VIEWPORT FITTING (MANDATORY BASE)
+   =========================================== */
+.slide {
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    overflow: hidden;
+    scroll-snap-align: start;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    padding: var(--slide-padding);
+    background: var(--surface-white);
+}
+
+.slide-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    max-height: 100%;
+    overflow: hidden;
+    gap: var(--content-gap);
+    max-width: 1440px;
+    width: 100%;
+    margin: 0 auto;
+}
+
+img, .image-container {
+    max-width: 100%;
+    max-height: min(50vh, 400px);
+    object-fit: contain;
+}
+
+/* ===========================================
+   TYPOGRAPHY
+   =========================================== */
+h1, h2, h3, h4 {
+    font-family: var(--font-sans);
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -0.01em;
+    color: var(--brand-navy);
+}
+h2 { font-size: var(--h2-size); font-weight: 700; }
+h3 { font-size: var(--h3-size); font-weight: 700; }
+p { font-size: var(--body-size); line-height: 1.55; color: var(--text-secondary); }
+
+.mono { font-family: var(--font-mono); font-size: var(--mono-size); }
+
+.accent-orange { color: var(--brand-orange); }
+.accent-blue { color: var(--brand-blue); }
+.accent-navy { color: var(--brand-navy); }
+
+/* ===========================================
+   REUSABLE PIECES
+   =========================================== */
+.eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: var(--small-size);
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--brand-orange);
+    padding: 6px 14px;
+    background: #ffd6a233;
+    border-radius: var(--radius-pill);
+    align-self: flex-start;
+}
+.eyebrow .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--brand-orange); }
+
+.badge {
+    display: inline-block;
+    padding: 4px 12px;
+    font-size: var(--small-size);
+    font-weight: 600;
+    border-radius: var(--radius-pill);
+    background: var(--surface-blue);
+    color: var(--brand-blue);
+    letter-spacing: 0.04em;
+}
+.badge-amber { background: #ffd6a233; color: var(--brand-orange); }
+.badge-green { background: #92c83e22; color: #00ac4e; }
+.badge-purple { background: #85439a22; color: #85439a; }
+.badge-cyan { background: #00b3d922; color: #007a99; }
+
+/* Cards grid (generic) */
+.grid {
+    display: grid;
+    gap: clamp(0.75rem, 1.2vw, 1.25rem);
+}
+.grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.grid-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+
+.card {
+    background: var(--surface-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: clamp(0.85rem, 1.4vw, 1.4rem);
+    box-shadow: var(--shadow-card);
+    display: flex;
+    flex-direction: column;
+    gap: clamp(0.3rem, 0.8vw, 0.7rem);
+    min-width: 0;
+}
+.card .card-title {
+    font-weight: 700;
+    font-size: var(--body-size);
+    color: var(--brand-navy);
+}
+.card .card-body {
+    font-size: var(--small-size);
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+.card-accent {
+    border: 1px solid var(--brand-orange-light);
+    background: linear-gradient(180deg, #ffffff 0%, #fff7ec 100%);
+}
+.card-dark {
+    background: var(--brand-navy);
+    border: 1px solid var(--brand-navy);
+    color: #ffffff;
+}
+.card-dark .card-title { color: #ffffff; }
+.card-dark .card-body { color: #c4d5dd; }
+
+/* Table */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--small-size);
+    background: var(--surface-white);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    box-shadow: var(--shadow-card);
+}
+th, td {
+    padding: clamp(0.5rem, 1vw, 0.85rem) clamp(0.6rem, 1.2vw, 1.1rem);
+    text-align: left;
+    border-bottom: 1px solid var(--border-light);
+    vertical-align: top;
+}
+th {
+    background: var(--brand-navy);
+    color: #ffffff;
+    font-weight: 700;
+    font-size: var(--small-size);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+tbody tr:nth-child(even) { background: var(--surface-card); }
+tbody tr:hover { background: #fff7ec; }
+td strong { color: var(--brand-navy); font-weight: 700; }
+
+/* Bullets */
+.bullets {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(0.4rem, 0.9vw, 0.8rem);
+    list-style: none;
+}
+.bullets li {
+    display: flex;
+    gap: 0.7rem;
+    align-items: flex-start;
+    font-size: var(--body-size);
+    line-height: 1.5;
+    color: var(--text-primary);
+}
+.bullets li::before {
+    content: "";
+    flex-shrink: 0;
+    width: 8px;
+    height: 8px;
+    margin-top: 0.55em;
+    border-radius: 2px;
+    background: var(--gradient-warm);
+}
+.bullets li strong { color: var(--brand-navy); font-weight: 700; }
+
+/* Code block */
+pre.code {
+    background: var(--brand-navy);
+    color: #e3f0f7;
+    padding: clamp(0.8rem, 1.5vw, 1.4rem);
+    border-radius: var(--radius-md);
+    font-family: var(--font-mono);
+    font-size: var(--mono-size);
+    line-height: 1.55;
+    overflow: hidden;
+    white-space: pre;
+    box-shadow: var(--shadow-lg);
+    position: relative;
+}
+pre.code::before {
+    content: "";
+    position: absolute;
+    top: 12px;
+    left: 14px;
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--brand-orange);
+    box-shadow: 18px 0 0 var(--brand-yellow), 36px 0 0 #00ac4e;
+}
+pre.code .hl { color: var(--brand-amber); font-weight: 600; }
+pre.code .cm { color: #698695; font-style: italic; }
+pre.code .str { color: var(--brand-yellow); }
+pre.code .kw { color: var(--brand-orange); }
+pre.code .num { color: var(--brand-cyan); }
+
+/* ASCII diagram container */
+pre.ascii {
+    background: var(--surface-card);
+    color: var(--brand-navy);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: clamp(0.7rem, 1.3vw, 1.3rem);
+    font-family: var(--font-mono);
+    font-size: clamp(0.55rem, 0.85vw, 0.8rem);
+    line-height: 1.4;
+    overflow: hidden;
+    white-space: pre;
+    text-align: left;
+}
+
+/* Decorative orbs / shapes */
+.orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(60px);
+    opacity: 0.35;
+    pointer-events: none;
+    z-index: 0;
+}
+.orb-amber { background: var(--brand-amber); }
+.orb-orange { background: var(--brand-orange); }
+.orb-cyan { background: var(--brand-cyan); }
+.orb-navy { background: var(--brand-navy-mid); }
+
+/* ===========================================
+   SLIDE: TITLE
+   =========================================== */
+.slide-title {
+    background:
+        radial-gradient(ellipse at 85% 10%, #fcd55466 0%, transparent 55%),
+        radial-gradient(ellipse at 10% 90%, #fe762422 0%, transparent 60%),
+        var(--surface-white);
+    justify-content: center;
+    overflow: hidden;
+}
+.slide-title .title-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(0.8rem, 2vw, 1.8rem);
+    max-width: 1200px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+}
+.slide-title h1 {
+    font-size: clamp(2.5rem, 7vw, 6rem);
+    font-weight: 800;
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+    color: var(--brand-navy);
+}
+.slide-title h1 .gradient-text {
+    background: var(--gradient-warm);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    display: inline-block;
+}
+.slide-title .lead {
+    font-size: clamp(1rem, 1.8vw, 1.4rem);
+    color: var(--text-secondary);
+    max-width: 780px;
+    font-weight: 400;
+    line-height: 1.5;
+}
+.slide-title .meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: clamp(0.5rem, 1.5vw, 1.5rem);
+    align-items: center;
+    margin-top: clamp(0.5rem, 1vw, 1rem);
+}
+.slide-title .meta-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6em;
+    padding: 10px 22px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-pill);
+    background: var(--surface-white);
+    font-weight: 600;
+    font-size: var(--small-size);
+    color: var(--brand-navy);
+    box-shadow: var(--shadow-card);
+}
+.slide-title .meta-chip .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--brand-orange); }
+.slide-title .meta-chip.primary {
+    background: var(--gradient-cta);
+    color: #ffffff;
+    border-color: transparent;
+}
+.slide-title .meta-chip.primary .dot { background: #ffffff; }
+
+.brand-mark {
+    position: absolute;
+    top: var(--slide-padding);
+    left: var(--slide-padding);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 800;
+    color: var(--brand-navy);
+    font-size: clamp(0.8rem, 1.1vw, 1rem);
+    letter-spacing: -0.01em;
+    z-index: 2;
+}
+.brand-mark .logo-shape {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: var(--gradient-cta);
+    display: grid;
+    place-items: center;
+    color: #ffffff;
+    font-size: 0.75rem;
+    font-weight: 800;
+}
+.brand-mark small { color: var(--text-muted); font-weight: 500; margin-left: 4px; }
+
+/* ===========================================
+   SLIDE: SECTION DIVIDER
+   =========================================== */
+.slide-divider {
+    background: var(--brand-navy);
+    color: #ffffff;
+    justify-content: center;
+    overflow: hidden;
+}
+.slide-divider::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(ellipse at 80% 30%, #fe762433 0%, transparent 55%),
+        radial-gradient(ellipse at 10% 80%, #00b3d922 0%, transparent 55%);
+    z-index: 0;
+}
+.slide-divider .divider-wrap {
+    position: relative;
+    z-index: 1;
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+}
+.slide-divider .section-num {
+    font-size: clamp(6rem, 18vw, 14rem);
+    font-weight: 800;
+    line-height: 0.85;
+    color: transparent;
+    -webkit-text-stroke: 2px #fe7624;
+    letter-spacing: -0.05em;
+    font-family: var(--font-sans);
+}
+.slide-divider h2 {
+    font-size: clamp(2.25rem, 5.5vw, 4rem);
+    color: #ffffff;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    max-width: 1000px;
+}
+.slide-divider h2 .accent { color: var(--brand-amber); }
+.slide-divider .divider-sub {
+    font-size: clamp(0.95rem, 1.5vw, 1.2rem);
+    color: #c4d5dd;
+    max-width: 700px;
+    margin-top: 0.5rem;
+    line-height: 1.5;
+}
+.slide-divider .divider-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-size: var(--small-size);
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--brand-amber);
+}
+.slide-divider .divider-label::before {
+    content: "";
+    width: 32px;
+    height: 2px;
+    background: var(--brand-amber);
+}
+
+/* ===========================================
+   SLIDE: CONTENT (generic)
+   =========================================== */
+.slide-content-body {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(0.8rem, 1.5vw, 1.5rem);
+}
+.slide-header {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+}
+.slide-header h2 {
+    font-size: var(--h2-size);
+    color: var(--brand-navy);
+    line-height: 1.1;
+}
+.slide-header .lead {
+    font-size: var(--body-size);
+    color: var(--text-secondary);
+    max-width: 900px;
+    line-height: 1.5;
+}
+
+/* Two column layout */
+.two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: clamp(1rem, 2vw, 2rem);
+    align-items: stretch;
+}
+
+/* Flow diagram (pipeline arrows) */
+.flow {
+    display: flex;
+    align-items: stretch;
+    gap: clamp(0.4rem, 0.8vw, 0.8rem);
+    flex-wrap: nowrap;
+    justify-content: stretch;
+}
+.flow-step {
+    flex: 1;
+    min-width: 0;
+    background: var(--surface-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: clamp(0.5rem, 1vw, 1rem);
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    position: relative;
+}
+.flow-step .flow-num {
+    font-family: var(--font-mono);
+    font-size: var(--small-size);
+    color: var(--brand-orange);
+    font-weight: 700;
+}
+.flow-step .flow-title {
+    font-size: var(--body-size);
+    font-weight: 700;
+    color: var(--brand-navy);
+}
+.flow-step .flow-body {
+    font-size: var(--small-size);
+    color: var(--text-secondary);
+    line-height: 1.4;
+}
+.flow-arrow {
+    display: flex;
+    align-items: center;
+    color: var(--brand-orange);
+    font-size: 1.25rem;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+/* Stat grid */
+.stat-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: clamp(0.75rem, 1.5vw, 1.5rem);
+}
+.stat {
+    background: var(--surface-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: clamp(1rem, 1.8vw, 1.8rem);
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    box-shadow: var(--shadow-card);
+}
+.stat.featured {
+    background: var(--brand-navy);
+    border-color: var(--brand-navy);
+    color: #ffffff;
+    position: relative;
+    overflow: hidden;
+}
+.stat.featured::after {
+    content: "";
+    position: absolute;
+    inset: auto -20% -40% auto;
+    width: 80%; height: 80%;
+    background: var(--gradient-cta);
+    border-radius: 50%;
+    filter: blur(30px);
+    opacity: 0.35;
+}
+.stat .big-num {
+    font-size: clamp(2rem, 4vw, 3.5rem);
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    background: var(--gradient-warm);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+.stat.featured .big-num {
+    background: var(--gradient-cta);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+.stat .stat-label {
+    font-size: var(--small-size);
+    color: var(--text-secondary);
+    font-weight: 500;
+    line-height: 1.4;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+.stat.featured .stat-label { color: #c4d5dd; }
+.stat .stat-body {
+    font-size: var(--body-size);
+    color: var(--text-primary);
+    font-weight: 600;
+    line-height: 1.4;
+}
+.stat.featured .stat-body { color: #ffffff; }
+
+/* Closing slide */
+.slide-closing {
+    background:
+        radial-gradient(ellipse at 70% 80%, #fe762422 0%, transparent 55%),
+        radial-gradient(ellipse at 20% 20%, #fcd55433 0%, transparent 55%),
+        var(--surface-white);
+    justify-content: center;
+    text-align: left;
+}
+.slide-closing .closing-wrap {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: clamp(0.8rem, 1.8vw, 1.8rem);
+    position: relative;
+    z-index: 1;
+}
+.slide-closing h1 {
+    font-size: clamp(2rem, 5.5vw, 4.5rem);
+    color: var(--brand-navy);
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.02em;
+}
+.slide-closing h1 .gradient-text {
+    background: var(--gradient-warm);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* Career path ladder */
+.ladder {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(0.35rem, 0.8vw, 0.8rem);
+}
+.rung {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 1rem;
+    align-items: center;
+    padding: clamp(0.5rem, 1vw, 0.9rem) clamp(0.7rem, 1.2vw, 1.2rem);
+    background: var(--surface-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    position: relative;
+    box-shadow: var(--shadow-card);
+}
+.rung .level {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: var(--small-size);
+    color: var(--brand-orange);
+    width: 44px;
+    text-align: center;
+}
+.rung .role {
+    font-weight: 700;
+    font-size: var(--body-size);
+    color: var(--brand-navy);
+}
+.rung .role small {
+    display: block;
+    font-weight: 400;
+    color: var(--text-secondary);
+    font-size: var(--small-size);
+    margin-top: 2px;
+}
+.rung .branches {
+    font-size: var(--small-size);
+    color: var(--brand-blue);
+    font-weight: 600;
+}
+.rung.senior { background: linear-gradient(90deg, #ffffff 0%, #fff7ec 100%); border-color: var(--brand-orange-light); }
+.rung.staff { background: var(--brand-navy); border-color: var(--brand-navy); }
+.rung.staff .role { color: #ffffff; }
+.rung.staff .role small { color: #c4d5dd; }
+.rung.staff .level { color: var(--brand-amber); }
+.rung.staff .branches { color: var(--brand-amber); }
+
+/* ===========================================
+   ANIMATIONS
+   =========================================== */
+.reveal {
+    opacity: 0;
+    transform: translateY(24px);
+    transition:
+        opacity var(--duration-normal) var(--ease-out-expo),
+        transform var(--duration-normal) var(--ease-out-expo);
+}
+.slide.visible .reveal { opacity: 1; transform: translateY(0); }
+.slide.visible .reveal:nth-child(1) { transition-delay: 0.08s; }
+.slide.visible .reveal:nth-child(2) { transition-delay: 0.16s; }
+.slide.visible .reveal:nth-child(3) { transition-delay: 0.24s; }
+.slide.visible .reveal:nth-child(4) { transition-delay: 0.32s; }
+.slide.visible .reveal:nth-child(5) { transition-delay: 0.40s; }
+.slide.visible .reveal:nth-child(6) { transition-delay: 0.48s; }
+
+.stagger > * {
+    opacity: 0;
+    transform: translateY(18px);
+    transition:
+        opacity 0.55s var(--ease-out-expo),
+        transform 0.55s var(--ease-out-expo);
+}
+.slide.visible .stagger > *:nth-child(1) { transition-delay: 0.15s; }
+.slide.visible .stagger > *:nth-child(2) { transition-delay: 0.22s; }
+.slide.visible .stagger > *:nth-child(3) { transition-delay: 0.29s; }
+.slide.visible .stagger > *:nth-child(4) { transition-delay: 0.36s; }
+.slide.visible .stagger > *:nth-child(5) { transition-delay: 0.43s; }
+.slide.visible .stagger > *:nth-child(6) { transition-delay: 0.50s; }
+.slide.visible .stagger > *:nth-child(7) { transition-delay: 0.57s; }
+.slide.visible .stagger > *:nth-child(8) { transition-delay: 0.64s; }
+.slide.visible .stagger > * {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Orb pulse */
+@keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 0.3; }
+    50% { transform: scale(1.15); opacity: 0.45; }
+}
+.orb { animation: pulse 8s ease-in-out infinite; }
+
+/* ===========================================
+   NAVIGATION
+   =========================================== */
+.progress-bar {
+    position: fixed;
+    top: 0; left: 0;
+    height: 3px;
+    background: var(--gradient-cta);
+    width: 0%;
+    z-index: 1000;
+    transition: width 0.3s ease;
+}
+
+.nav-dots {
+    position: fixed;
+    right: clamp(0.75rem, 1.5vw, 1.5rem);
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 999;
+}
+.nav-dots button {
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    border: 1.5px solid var(--border);
+    background: transparent;
+    padding: 0;
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+.nav-dots button.active {
+    background: var(--brand-orange);
+    border-color: var(--brand-orange);
+    transform: scale(1.35);
+}
+.nav-dots button:hover { border-color: var(--brand-orange); }
+
+.slide-counter {
+    position: fixed;
+    bottom: clamp(0.75rem, 1.5vw, 1.5rem);
+    right: clamp(0.75rem, 1.5vw, 1.5rem);
+    font-family: var(--font-mono);
+    font-size: var(--small-size);
+    color: var(--text-muted);
+    background: var(--surface-white);
+    padding: 6px 14px;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-card);
+    z-index: 999;
+}
+.slide-counter strong { color: var(--brand-orange); font-weight: 700; }
+
+.slide-footer {
+    position: absolute;
+    bottom: calc(var(--slide-padding) * 0.5);
+    left: var(--slide-padding);
+    right: var(--slide-padding);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: var(--small-size);
+    color: var(--text-muted);
+    pointer-events: none;
+    z-index: 2;
+}
+.slide-footer .section-tag { font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--brand-navy); }
+.slide-footer .trainer-tag { color: var(--brand-orange); font-weight: 600; }
+
+/* ===========================================
+   RESPONSIVE BREAKPOINTS
+   =========================================== */
+@media (max-height: 700px) {
+    :root {
+        --slide-padding: clamp(1rem, 3vw, 2.5rem);
+        --content-gap: clamp(0.5rem, 1.2vw, 1.2rem);
+        --title-size: clamp(1.6rem, 4.5vw, 3rem);
+        --h2-size: clamp(1.2rem, 3vw, 2rem);
+    }
+}
+@media (max-height: 600px) {
+    :root {
+        --slide-padding: clamp(0.75rem, 2.5vw, 1.75rem);
+        --content-gap: clamp(0.4rem, 1vw, 0.9rem);
+        --title-size: clamp(1.3rem, 4vw, 2.5rem);
+        --h2-size: clamp(1.05rem, 2.5vw, 1.6rem);
+        --body-size: clamp(0.7rem, 1.1vw, 0.95rem);
+    }
+    .nav-dots, .slide-counter { display: none; }
+}
+@media (max-height: 500px) {
+    :root {
+        --slide-padding: clamp(0.5rem, 2vw, 1.2rem);
+        --title-size: clamp(1.1rem, 3.5vw, 1.8rem);
+        --h2-size: clamp(0.95rem, 2.3vw, 1.35rem);
+        --body-size: clamp(0.65rem, 1vw, 0.85rem);
+    }
+}
+@media (max-width: 767px) {
+    .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+    .two-col { grid-template-columns: 1fr; }
+    .flow { flex-direction: column; }
+    .flow-arrow { transform: rotate(90deg); justify-content: center; }
+    .stat-grid { grid-template-columns: 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.2s !important;
+    }
+    html { scroll-behavior: auto; }
+}
+</style>
+</head>
+<body>
+
+<!-- Progress bar / navigation -->
+<div class="progress-bar" id="progress" style="width: 13.1579%;"></div>
+<nav class="nav-dots" id="navDots" aria-label="Slide navigation"><button aria-label="Go to slide 1" class=""></button><button aria-label="Go to slide 2" class=""></button><button aria-label="Go to slide 3" class=""></button><button aria-label="Go to slide 4" class=""></button><button aria-label="Go to slide 5" class="active"></button><button aria-label="Go to slide 6"></button><button aria-label="Go to slide 7"></button><button aria-label="Go to slide 8"></button><button aria-label="Go to slide 9"></button><button aria-label="Go to slide 10"></button><button aria-label="Go to slide 11"></button><button aria-label="Go to slide 12"></button><button aria-label="Go to slide 13"></button><button aria-label="Go to slide 14"></button><button aria-label="Go to slide 15"></button><button aria-label="Go to slide 16"></button><button aria-label="Go to slide 17"></button><button aria-label="Go to slide 18"></button><button aria-label="Go to slide 19"></button><button aria-label="Go to slide 20"></button><button aria-label="Go to slide 21"></button><button aria-label="Go to slide 22"></button><button aria-label="Go to slide 23"></button><button aria-label="Go to slide 24"></button><button aria-label="Go to slide 25"></button><button aria-label="Go to slide 26"></button><button aria-label="Go to slide 27"></button><button aria-label="Go to slide 28"></button><button aria-label="Go to slide 29"></button><button aria-label="Go to slide 30"></button><button aria-label="Go to slide 31"></button><button aria-label="Go to slide 32"></button><button aria-label="Go to slide 33"></button><button aria-label="Go to slide 34"></button><button aria-label="Go to slide 35"></button><button aria-label="Go to slide 36"></button><button aria-label="Go to slide 37"></button><button aria-label="Go to slide 38"></button></nav>
+<div class="slide-counter" id="counter"><strong>05</strong> / 38</div>
+
+<!-- ===========================================
+     SLIDE 1 — TITLE
+     =========================================== -->
+<section class="slide slide-title visible">
+    <div class="brand-mark reveal">
+        <span class="logo-shape">X</span>
+        <span>TechX × AWS Accelerator</span>
+        <small>· 2026 Cohort</small>
+    </div>
+
+    <div class="title-wrap">
+        <span class="eyebrow reveal"><span class="dot"></span>Tuần 4 · Data Pipeline Layer</span>
+        <h1 class="reveal">
+            Data Engineering<br>
+            trên <span class="gradient-text">AWS</span>.
+        </h1>
+        <p class="lead reveal">
+            Từ raw event đến business insight — kiến trúc, dịch vụ, và quyết định thiết kế
+            của một pipeline production trong kỷ nguyên cloud-native.
+        </p>
+        <div class="meta-row reveal">
+            <span class="meta-chip primary"><span class="dot"></span>Trainer · Kha</span>
+            <span class="meta-chip"><span class="dot"></span>~30 phút</span>
+            <span class="meta-chip"><span class="dot"></span>6 Sections · Q&amp;A</span>
+        </div>
+    </div>
+</section>
+
+<!-- ===========================================
+     SLIDE 2 — AGENDA
+     =========================================== -->
+<section class="slide visible">
+    <div class="slide-content slide-content-body">
+        <div class="slide-header reveal">
+            <span class="eyebrow"><span class="dot"></span>Agenda</span>
+            <h2>Hành trình 30 phút.</h2>
+            <p class="lead">6 phần — từ khái niệm nền tảng, qua AWS services, đến real-world architectures và định hướng nghề nghiệp.</p>
+        </div>
+
+        <div class="grid grid-4 stagger">
+            <div class="card">
+                <span class="badge badge-amber">01</span>
+                <div class="card-title">Data là gì?</div>
+                <div class="card-body">Định nghĩa, 3 loại data, value chain.</div>
+            </div>
+            <div class="card">
+                <span class="badge badge-amber">02</span>
+                <div class="card-title">Data Engineer làm gì?</div>
+                <div class="card-body">4 trụ cột, kỹ năng, ETL vs ELT.</div>
+            </div>
+            <div class="card">
+                <span class="badge badge-amber">03</span>
+                <div class="card-title">Components</div>
+                <div class="card-body">Reference arch, zones, governance.</div>
+            </div>
+            <div class="card">
+                <span class="badge badge-amber">04</span>
+                <div class="card-title">AWS Data Services</div>
+                <div class="card-body">Ingestion, storage, processing, query.</div>
+            </div>
+            <div class="card">
+                <span class="badge badge-amber">05</span>
+                <div class="card-title">Real-world Architectures</div>
+                <div class="card-body">4 case studies + pitfalls.</div>
+            </div>
+            <div class="card card-accent">
+                <span class="badge badge-amber">06</span>
+                <div class="card-title">Q&amp;A + Career</div>
+                <div class="card-body">Định hướng nghề nghiệp DE.</div>
+            </div>
+            <div class="card card-dark" style="grid-column: span 2;">
+                <div class="card-title" style="color: var(--brand-amber);">Goal</div>
+                <div class="card-body">Rời phòng với mental model của DE + plan học cụ thể.</div>
+            </div>
+        </div>
+    </div>
+    <div class="slide-footer"><span class="section-tag">Agenda</span><span class="trainer-tag">Kha · W4</span></div>
+</section>
+
+<!-- ===========================================
+     SLIDE 3 — SECTION DIVIDER 1
+     =========================================== -->
+<section class="slide slide-divider visible">
+    <div class="divider-wrap">
+        <span class="divider-label reveal">Section 01</span>
+        <div class="section-num reveal">01</div>
+        <h2 class="reveal">Data <span class="accent">là gì?</span></h2>
+        <p class="divider-sub reveal">Nếu không định nghĩa được data, không thể thiết kế pipeline cho nó.</p>
+    </div>
+</section>
+
+<!-- ===========================================
+     SLIDE 4 — DATA DEFINITION + 3 TYPES
+     =========================================== -->
+<section class="slide visible">
+    <div class="slide-content slide-content-body">
+        <div class="slide-header reveal">
+            <span class="eyebrow"><span class="dot"></span>01 · Định nghĩa</span>
+            <h2>Data = sự kiện được ghi lại.</h2>
+            <p class="lead"><strong>Events, measurements, observations</strong> — được lưu dưới dạng máy tính xử lý được. 3 dạng chính, mỗi dạng có storage tối ưu riêng trên AWS.</p>
+        </div>
+
+        <table class="reveal">
+            <thead>
+                <tr><th>Loại</th><th>Đặc điểm</th><th>Ví dụ</th><th>AWS Storage</th></tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Structured</strong><br><span class="badge badge-cyan">SQL</span></td>
+                    <td>Schema rõ ràng, bảng cột</td>
+                    <td>Transactions, users, orders</td>
+                    <td>RDS · Aurora · Redshift</td>
+                </tr>
+                <tr>
+                    <td><strong>Semi-structured</strong><br><span class="badge badge-amber">JSON</span></td>
+                    <td>Cấu trúc lỏng, tự mô tả</td>
+                    <td>JSON logs, XML, CSV</td>
+                    <td>S3 · DynamoDB · OpenSearch</td>
+                </tr>
+                <tr>
+                    <td><strong>Unstructured</strong><br><span class="badge badge-purple">Blob</span></td>
+                    <td>Không có schema</td>
+                    <td>Ảnh, video, audio, text</td>
+                    <td>S3 · FSx</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="slide-footer"><span class="section-tag">01 · Data là gì</span><span class="trainer-tag">Kha · W4</span></div>
+</section>
+
+<!-- ===========================================
+     SLIDE 5 — DATA VOLUME EXPLOSION
+     =========================================== -->
+<section class="slide visible">
+    <div class="slide-content slide-content-body">
+        <div class="slide-header reveal">
+            <span class="eyebrow"><span class="dot"></span>01 · Data growth</span>
+            <h2>Data tăng <span class="accent-orange">exponential</span>.</h2>
+            <p class="lead">Không thể xử lý bằng tool truyền thống — đây là lý do Data Engineering tồn tại như một discipline riêng.</p>
+        </div>
+
+        <div class="stat-grid stagger">
+            <div class="stat">
+                <span class="stat-label">Năm 2010</span>
+                <div class="big-num">2 ZB</div>
+                <div class="stat-body">Tổng data toàn cầu</div>
+            </div>
+            <div class="stat featured">
+                <span class="stat-label">Dự báo 2025</span>
+                <div class="big-num">181 ZB</div>
+                <div class="stat-body">×90 lần trong 15 năm</div>
+            </div>
+            <div class="stat">
+                <span class="stat-label">Bài học</span>
+                <div class="big-num" style="font-size: clamp(1.3rem, 2.5vw, 2rem); -webkit-text-fill-color: var(--brand-navy); background: none; color: var(--brand-navy);">Excel &amp; single DB hết cửa.</div>
+                <div class="stat-body">Cần distributed + cloud-native.</div>
+            </div>
+        </div>
+
+        <div class="card reveal" style="background: var(--brand-navy); color: #fff; border: none;">
+            <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+                <span class="badge badge-amber" style="background: var(--brand-amber); color: var(--brand-navy);">Value Chain</span>
+                <span class="mono" style="color: #ffd6a2; font-size: clamp(0.7rem, 1.1vw, 1rem);">Raw → Cleaned → Information → Insight → Decision → Action → <strong style="color: var(--brand-amber);">Business Value</strong></span>
+            </div>
+            <div style="font-size: var(--small-size); color: #c4d5dd; margin-top: 0.4rem;">
+                Mỗi bước tăng giá trị nhưng cũng tăng chi phí. Data Engineer vận hành toàn bộ chuỗi này.
+            </div>
+        </div>
+    </div>
+    <div class="slide-footer"><span class="section-tag">01 · Data là gì</span><span class="trainer-tag">Kha · W4</span></div>
+</section>
+
+<!-- ===========================================
+     SLIDE 6 — WHY DATA MATTERS
+     =========================================== -->
+<section class="slide">
+    <div class="slide-content slide-content-body">
+        <div class="slide-header reveal">
+            <span class="eyebrow"><span class="dot"></span>01 · Tại sao quan trọng</span>
+            <h2>Data = competitive moat của thập kỷ.</h2>
+        </div>
+
+        <div class="grid grid-3 stagger">
+            <div class="card">
+                <span class="badge">MIT study</span>
+                <div class="card-title">Data-driven &gt; Gut feeling</div>
+                <div class="card-body">Ra quyết định dựa trên data cho kết quả tốt hơn <strong>5–6%</strong> so với "cảm tính" — tích luỹ qua nhiều năm tạo cách biệt lớn.</div>
+            </div>
+            <div class="card card-accent">
+                <span class="badge badge-amber">Law of AI/ML</span>
+                <div class="card-title">"Garbage in, garbage out"</div>
+                <div class="card-body">Model tốt nhất cũng vô dụng với data bẩn. <strong>80% effort của ML team</strong> là data preparation.</div>
+            </div>
+            <div class="card card-dark">
+                <span class="badge" style="background: var(--brand-amber); color: var(--brand-navy);">Moat</span>
+                <div class="card-title">Ai sở hữu data chất lượng sẽ thắng</div>
+                <div class="card-body">AI dân chủ hoá — model ai cũng dùng được. Nhưng <strong>proprietary data</strong> thì không copy được.</div>
+            </div>
+        </div>
+    </div>
+    <div class="slide-footer"><span class="section-tag">01 · Data là gì</span><span class="trainer-tag">Kha · W4</span></div>
+</section>
+
+<!-- ===========================================
+     SLIDE 7 — SECTION DIVIDER 2
+     =========================================== -->
+<section class="slide slide-divider">
+    <div class="divider-wrap">
+        <span class="divider-label reveal">Section 02</span>
+        <div class="section-num reveal">02</div>
+        <h2 class="reveal">Data Engineer <span class="accent">làm gì?</span></h2>
+        <p class="divider-sub reveal">Xây hạ tầng để data chảy <strong style="color:#fff">đáng tin cậy, nhanh, tiết kiệm</strong> — từ nguồn đến người dùng cuối.</p>
+    </div>
+</section>
+
+<!-- ===========================================
+     SLIDE 8 — 4 PILLARS OF DE WORK
+     =========================================== -->
+<section class="slide">
+    <div class="slide-content slide-content-body">
+        <div class="slide-header reveal">
+            <span class="eyebrow"><span class="dot"></span>02 · 4 trụ cột công việc</span>
+            <h2>Ingest → Transform → Store → Serve.</h2>
+        </div>
+
+        <div class="grid grid-4 stagger">
+            <div class="card">
+                <span class="badge badge-amber">01</span>
+                <div class="card-title">Ingestion</div>
+                <div class="card-body">Đưa data vào hệ thống. Batch (DB/file/API), streaming (click/IoT/log), <strong>CDC</strong> từ OLTP.</div>
+            </div>
+            <div class="card">
+                <span class="badge badge-amber">02</span>
+                <div class="card-title">Transformation</div>
+                <div class="card-body"><strong>Clean</strong> null/dup/outlier · <strong>Enrich</strong> join context · <strong>Aggregate</strong> theo ngày/tuần · <strong>Reshape</strong> wide↔long.</div>
+            </div>
+            <div class="card">
+                <span class="badge badge-amber">03</span>
+                <div class="card-title">Storage</div>
+                <div class="card-body"><strong>Data Lake</strong> (S3) · <strong>Warehouse</strong> (Redshift) · <strong>Operational</strong> (DynamoDB, Aurora). Chọn đúng theo pattern truy cập.</div>
+            </div>
+            <div class="card">
+                <span class="badge badge-amber">04</span>
+                <div class="card-title">Serving</div>
+                <div class="card-body">BI dashboard · DS notebook · Embedded analytics · ML feature store. Ai dùng quyết định shape data.</div>
+            </div>
+        </div>
+
+        <div class="card reveal" style="background: var(--gradient-cta); border: none; color: #fff;">
+            <div style="font-size: var(--body-size); font-weight: 600;">
+                DE = <strong>foundation</strong>. Analyst và Data Scientist phụ thuộc hoàn toàn vào chất lượng pipeline bạn build.
+            </div>
+        </div>
+    </div>
+    <div class="slide-footer"><span class="section-tag">02 · Data Engineer</span><span class="trainer-tag">Kha · W4</span></div>
+</section>
+
+<!-- ===========================================
+     SLIDE 9 — DE vs DA vs DS
+     =========================================== -->
+<section class="slide">
+    <div class="slide-content slide-content-body">
+        <div class="slide-header reveal">
+            <span class="eyebrow"><span class="dot"></span>02 · Phân biệt 3 vai trò</span>
+            <h2>DE, DA, DS — đừng lẫn.</h2>
+            <p class="lead">3 role bị confused nhiều nhất trong data team. Output khác nhau, KPI khác nhau, tool khác nhau.</p>
+        </div>
+
+        <table class="reveal">
+            <thead>
+                <tr><th style="width: 24%">Vai trò</th><th>Mục tiêu chính</th><th>Output</th><th>Công cụ chủ đạo</th></tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Data Engineer</strong><br><span class="badge badge-amber">Foundation</span></td>
+                    <td>Pipeline chạy ổn định, data đến đúng chỗ, đúng lúc, đúng format</td>
+                    <td>Table, view, API</td>
+                    <td>SQL · Python · Spark · Airflow</td>
+                </tr>
+                <tr>
+                    <td><strong>Data Analyst</strong><br><span class="badge badge-cyan">Business</span></td>
+                    <td>Biến data thành insight kinh doanh</td>
+                    <td>Dashboard, report</td>
+                    <td>SQL · Excel · QuickSight · Tableau</td>
+                </tr>
+                <tr>
+                    <td><strong>Data Scientist</strong><br><span class="badge badge-purple">Prediction</span></td>
+                    <td>Model dự đoán tương lai / optimize</td>
+                    <td>Model, experiment</td>
+                    <td>Python · ML lib · Notebook · SageMaker</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="slide-footer"><span class="section-tag">02 · Data Engineer</span><span class="trainer-tag">Kha · W4</span></div>
+</section>
+
+<!-- ===========================================
+     SLIDE 10 — SKILLS REQUIRED
+     =========================================== -->
+<section class="slide">
+    <div class="slide-content slide-content-body">
+        <div class="slide-header reveal">
+            <span class="eyebrow"><span class="dot"></span>02 · Skills cần có</span>
+            <h2>Toolkit của một DE hiện đại.</h2>
+        </div>
+
+        <div class="grid grid-3 stagger">
+            <div class="card">
+                <div class="card-title"><span class="accent-orange">①</span> Ngôn ngữ</div>
+                <div class="card-body"><strong>SQL</strong> — bắt buộc, dùng mỗi ngày. <strong>Python/Scala</strong> cho ETL, data manipulation, automation.</div>
+            </div>
+            <div class="card">
+                <div class="card-title"><span class="accent-orange">②</span> Distributed systems</div>
+                <div class="card-body"><strong>Spark</strong> xử lý TB data. <strong>Kafka/Kinesis</strong> streaming. Hiểu partition, shuffle, checkpoint.</div>
+            </div>
+            <div class="card">
+                <div class="card-title"><span class="accent-orange">③</span> Cloud platform</div>
+                <div class="card-body">Chọn <strong>1 cloud</strong> để master: AWS / GCP / Azure. Đi sâu 1 cloud &gt; lướt 3 cloud.</div>
+            </div>
+            <div class="card">
+                <div class="card-title"><span class="accent-orange">④</span> Data modeling</div>
+                <div class="card-body"><strong>Star schema</strong>, SCD types, partition strategy, dimensional modeling — nền tảng warehouse.</div>
+            </div>
+            <div class="card">
+                <div class="card-title"><span class="accent-orange">⑤</span> DevOps mindset</div>
+                <div class="card-body"><strong>IaC</strong> (Terraform), CI/CD cho pipeline, monitoring, alerting — pipeline là product.</div>
+            </div>
+            <div class="card card-accent">
+                <div class="card-title"><span class="accent-orange">⑥</span> Business sense</div>
+                <div class="card-body">DE giỏi nhất hiểu <strong>tại sao</strong> data này quan trọng — không chỉ build theo ticket.</div>
+            </div>
+        </div>
+    </div>
+    <div class="slide-footer"><span class="section-tag">02 · Data Engineer</span><span class="trainer-tag">Kha · W4</span></div>
+</section>
+
+<!-- ===========================================
+     SLIDE 11 — ETL vs ELT
+     =========================================== -->
+<section class="slide">
+    <div class="slide-content slide-content-body">
+        <div class="slide-header reveal">
+            <span class="eyebrow"><span class="dot"></span>02 · Cuộc dịch chuyển lớn</span>
+            <h2>ETL → <span class="accent-orange">ELT</span>. Vì sao?</h2>
+        </div>
+
+        <div class="two-col stagger">
+            <div class="card" style="opacity: 0.85;">
+                <span class="badge">Truyền thống</span>
+                <div class="card-title">ETL · <span class="mono">Extract → Transform → Load</span></div>
+                <div class="card-body">Transform chạy trên <strong>ETL server riêng</strong> trước khi vào warehouse. Raw data không được giữ lại — muốn fix bug phải đọc lại từ source.</div>
+            </div>
+            <div class="card card-accent">
+                <span class="badge badge-amber">Cloud-native</span>
+                <div class="card-title">ELT · <span class="mono">Extract → Load → Transform</span></div>
+                <div class="card-body">Load <strong>raw</strong> vào S3/warehouse trước, transform <strong>sau</strong> bằng SQL. Raw data immutable, có thể reprocess cho use case mới.</div>
+            </div>
+        </div>
+
+        <div class="card reveal card-dark">
+            <div class="card-title" style="color: var(--brand-amber);">Vì sao ELT thắng?</div>
+            <div class="card-body" style="color: #fff;">
+                <strong>Storage rẻ</strong> (S3 ~$0.023/GB) · <strong>Compute on-demand</strong> (Athena, Redshift Serverless) ·
+                <strong>Giữ raw data</strong> cho use case tương lai — bạn không biết trước data này sẽ cần cho cái gì trong 2 năm tới.
+            </div>
+        </div>
+    </div>
+    <div class="slide-footer"><span class="section-tag">02 · Data Engineer</span><span class="trainer-tag">Kha · W4</span></div>
+</section>
+
+<!-- ===========================================
+     SLIDE 12 — SECTION DIVIDER 3
+     =========================================== -->
+<section class="slide slide-divider">
+    <div class="divider-wrap">
+        <span class="divider-label reveal">Section 03</span>
+        <div class="section-num reveal">03</div>
+        <h2 class="reveal">Components trong <span class="accent">Data Platform</span>.</h2>
+        <p class="divider-sub reveal">Kiến trúc tham chiếu — những mảnh ghép tạo nên một pipeline production.</p>
+    </div>
+</section>
+
+<!-- ===========================================
+     SLIDE 13 — REFERENCE ARCHITECTURE
+     =========================================== -->
+<section class="slide">
+    <div class="slide-content slide-content-body">
+        <div class="slide-header reveal">
+            <span class="eyebrow"><span class="dot"></span>03 · Reference architecture</span>
+            <h2>4 lớp chính + 3 cross-cutting.</h2>
+        </div>
+
+        <div class="flow stagger">
+            <div class="flow-step">
+                <span class="flow-num">01 · SOURCES</span>
+                <div class="flow-title">Nguồn data</div>
+                <div class="flow-body">OLTP DB · SaaS APIs · IoT/Logs · Files</div>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step">
+                <span class="flow-num">02 · INGESTION</span>
+                <div class="flow-title">Đưa vào</div>
+                <div class="flow-body">Batch · Streaming · CDC</div>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step">
+                <span class="flow-num">03 · STORAGE</span>
+                <div class="flow-title">Lưu trữ</div>
+                <div class="flow-body">Data Lake · Warehouse · NoSQL</div>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step">
+                <span class="flow-num">04 · SERVING</span>
+                <div class="flow-title">Phục vụ</div>
+                <div class="flow-body">BI · ML · API · Apps</div>
+            </div>
+        </div>
+
+        <div class="grid grid-3 reveal">
+            <div class="card" style="border-left: 4px solid var(--brand-orange);">
+                <div class="card-title">Orchestration</div>
+                <div class="card-body">Airflow · Step Functions · MWAA</div>
+            </div>
+            <div class="card" style="border-left: 4px solid var(--brand-blue);">
+                <div class="card-title">Catalog + Governance</div>
+                <div class="card-body">Glue Catalog · Lake Formation · Macie</div>
+            </div>
+            <div class="card" style="border-left: 4px solid var(--brand-cyan);">
+                <div class="card-title">Observability</div>
+                <div class="card-body">CloudWatch · Data quality checks · Lineage</div>
+            </div>
+        </div>
+    </div>
+    <div class="slide-footer"><span class="section-tag">03 · Components</span><span class="trainer-tag">Kha · W4</span></div>
+</section>
+
+<!-- ===========================================
+     SLIDE 13b — BIG DATA PIPELINE CHEATSHEET
+     =========================================== -->
+<section class="slide" style="background: #fafafa;">
+    <div class="slide-content" style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1.5rem; height:100%;">
+        <div class="reveal" style="text-align:center;">
+            <span class="eyebrow"><span class="dot"></span>03 · Big Picture</span>
+            <h2 style="margin-top:0.4rem;">Big Data Pipeline — <span class="accent-orange">AWS · Azure · GCP</span>.</h2>
+        </div>
+        <div class="reveal" style="flex:1; display:flex; align-items:center; justify-content:center; max-height:72vh;">
+            <img src="W4%20%E2%80%94%20Data%20Engineering%20tr%C3%AAn%20AWS%20%C2%B7%20Kha_files/bytebytego-big-data-pipeline.png" alt="Big Data Pipeline Cheatsheet — AWS vs Azure vs GCP" style="max-width:100%; max-height:100%; object-fit:contain; border-radius:16px; box-shadow:0 8px 40px rgba(29,29,29,0.10);">
+        </div>
+        <p class="reveal" style="font-size:12px; color:var(--color-text-muted); text-align:center; margin:0;">
+            Source: <a href="https://bytebytego.com/guides/big-data-pipeline-cheatsheet-for-aws-azure-and-google-cloud/" target="_blank" style="color:var(--color-blue);">ByteByteGo — Big Data Pipeline Cheatsheet for AWS, Azure and Google Cloud</a>
+        </p>
+    </div>
+    <div class="slide-footer"><span class="section-tag">03 · Components</span><span class="trainer-tag">Kha · W4</span></div>
+</section>
+
+<!-- ===========================================
+     SLIDE 14 — DATA LAKE ZONES (MEDALLION)
+     =========================================== -->
+<section class="slide">
+    <div class="slide-content slide-content-body">
+        <div class="slide-header reveal">
+            <span class="eyebrow"><span class="dot"></span>03 · Medallion architecture</span>
+            <h2>Data Lake Zones — <span class="accent-orange">Bronze · Silver · Gold</span>.</h2>
+        </div>
+
+        <div class="grid grid-3 stagger">
+            <div class="card" style="border-top: 5px solid #cd7f32;">
+                <span class="badge" style="background: #cd7f3222; color: #8b5a28;">Bronze · Raw</span>
+                <div class="card-title">Landing zone</div>
+                <div class="card-body">Data <strong>y nguyên từ nguồn</strong>, immutable. Format: JSON, CSV, log gốc. Never delete, never modify.</div>
+            </div>
+            <div class="card" style="border-top: 5px solid #c0c0c0;">
+                <span class="badge">Silver · Curated</span>
+                <div class="card-title">Cleaned &amp; validated</div>
+                <div class="card-body">Đã clean null/dup, validated schema, deduplicated. Format: <strong>Parquet, Delta</strong>.</div>
+            </div>
+            <div class="card card-accent" style="border-top: 5px solid var(--brand-amber);">
+                <span class="badge badge-amber">Gold · Consumption</span>
+                <div class="card-title">Business-ready</div>
+                <div class="card-body">Aggregated theo domain. Parquet <strong>partitioned</strong>, optimized cho BI + ML.</div>
+            </div>
+        </div>
+
+        <div class="card card-dark reveal">
+            <div class="card-title" style="color: var(--brand-amber);">Quy tắc vàng</div>
+            <div class="card-body" style="color: #fff; font-size: var(--body-size);">
+                <strong>Raw không bao giờ bị xóa hay sửa.</strong> Muốn fix bug → rerun pipeline từ raw. Đây là safety net cho toàn bộ data platform.
+            </div>
+        </div>
+    </div>
+    <div class="slide-footer"><span class="section-tag">03 · Components</span><span class="trainer-tag">Kha · W4</span></div>
+</section>
+
+<!-- ===========================================
+     SLIDE 14b — MEDALLION ARCHITECTURE IMAGE
+     =========================================== -->
+<section class="slide" style="background: #0d1117;">
+    <div class="slide-content" style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1.2rem; height:100%;">
+        <div class="reveal" style="text-align:center;">
+            <span class="eyebrow" style="background: #fe762433;"><span class="dot"></span>03 · Medallion in production</span>
+            <h2 style="color:#ffffff; margin-top:0.4rem;">Đây là cách Bronze → Silver → Gold trông thực tế.</h2>
+        </div>
+        <div class="reveal" style="flex:1; display:flex; align-items:center; justify-content:center; max-height:72vh; width:100%;">
+            <img src="W4%20%E2%80%94%20Data%20Engineering%20tr%C3%AAn%20AWS%20%C2%B7%20Kha_files/img_medallion_architecture_high_level.png" alt="Data Platform based on Medallion Architecture" style="max-width:100%; max-height:100%; object-fit:contain; border-radius:16px; box-shadow:0 8px 40px rgba(0,0,0,0.5);">
+        </div>
+        <div class="reveal" style="display:flex; gap:0.75rem; flex-wrap:wrap; justify-content:center;">
+            <span class="badge" style="background:#cd7f3230; color:#cd7f32; font-size:0.8rem;">Bronze — Raw ingestion · Python + Airflow</span>
+            <span class="badge" style="background:#c0c0c030; color:#c0c0c0; font-size:0.8rem;">Silver — DBT · Normalized &amp; deduplicated</span>
+            <span class="badge badge-amber" style="font-size:0.8rem;">Gold — PostgreSQL · Analytics-ready</span>
+            <span class="badge" style="background:#00b3d922; color:#00b3d9; font-size:0.8rem;">Airflow — Orchestration &amp; scheduling</span>
+        </div>
+    </div>
+    <div class="slide-footer" style="color:#698695;"><span class="section-tag" style="color:#c4d5dd;">03 · Components</span><span class="trainer-tag">Kha · W4</span></div>
+</section>
+
+<!-- ===========================================
+     SLIDE 15 — BATCH vs STREAMING
+     =========================================== -->
+<section class="slide">
+    <div class="slide-content slide-content-body">
+        <div class="slide-header reveal">
+            <span class="eyebrow"><span class="dot"></span>03 · Batch vs Streaming</span>
+            <h2>Khi nào dùng gì?</h2>
+            <p class="lead">Câu hỏi này quyết định <strong>50% kiến trúc</strong> của bạn — và 80% chi phí.</p>
+        </div>
+
+        <table class="reveal">
+            <thead>
+                <tr><th>Tiêu chí</th><th>Batch</th><th>Streaming</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><strong>Latency</strong></td><td>Phút → giờ → ngày</td><td>Mili-giây → giây</td></tr>
+                <tr><td><strong>Throughput</strong></td><td>Rất cao (TB/job)</td><td>Cao nhưng đắt hơn</td></tr>
+                <tr><td><strong>Complexity</strong></td><td>Thấp</td><td>Cao — state, watermark, late data</td></tr>
+                <tr><td><strong>Cost</strong></td><td>Rẻ</td><td><strong style="color: var(--brand-orange);">Đắt 3–10×</strong></td></tr>
+                <tr><td><strong>Use case</strong></td><td>Báo cáo ngày, ML training</td><td>Fraud detection, realtime dashboard, IoT</td></tr>
+            </tbody>
+        </table>
+
+        <div class="card reveal" style="background: var(--gradient-cta); border: none; color: #fff;">
+            <div style="font-size: var(--body-size); font-weight: 600;">
+                <strong>Lời khuyên vàng:</strong> Luôn bắt đầu bằng batch. Chỉ chuyển streaming khi business <em>thực sự</em> cần sub-minute latency.
+            </div>
+        </div>
+    </div>
+    <div class="slide-footer"><span class="section-tag">03 · Components</span><span class="trainer-tag">Kha · W4</span></div>
+</section>
+
+<!-- ===========================================
+     SLIDE 16 — METADATA & GOVERNANCE
+     =========================================== -->
+<section class="slide">
+    <div class="slide-content slide-content-body">
+        <div class="slide-header reveal">
+            <span class="eyebrow"><span class="dot"></span>03 · Metadata · Governance · Security</span>
+            <h2>Platform ≠ Pipeline.</h2>
+            <p class="lead">Pipeline là code. Platform là code + catalog + governance + security. Thiếu 3 cái sau, bạn có pipeline nhưng không có platform.</p>
+        </div>
+
+        <div class="grid grid-2 stagger">
+            <div class="card">
+                <span class="badge">Metadata &amp; Catalog</span>
+                <div class="card-title">Tìm data như tìm Google</div>
+                <ul class="bullets" style="margin-top: 0.3rem;">
+                    <li><strong>Schema registry</strong> — tránh breaking change giữa producer/consumer</li>
+                    <li><strong>Data catalog</strong> — tìm table nào có field gì</li>
+                    <li><strong>Lineage</strong> — data này từ đâu, chảy đi đâu</li>
+                    <li><span class="accent-orange">AWS:</span> Glue Catalog + Lake Formation làm cả 3</li>
+                </ul>
+            </div>
+            <div class="card card-accent">
+                <span class="badge badge-amber">Governance &amp; Security</span>
+                <div class="card-title">Đủ chặt cho compliance</div>
+                <ul class="bullets" style="margin-top: 0.3rem;">
+                    <li><strong>Access control</strong> — row/column-level (Lake Formation)</li>
+                    <li><strong>PII detection</strong> — Macie scan tự động</li>
+                    <li><strong>Encryption</strong> — at rest (KMS) + in transit (TLS)</li>
+                    <li><strong>Audit</strong> — CloudTrail + data access logs</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="slide-footer"><span class="section-tag">03 · Components</span><span class="trainer-tag">Kha · W4</span></div>
+</section>
+
+<!-- ===========================================
+     SLIDE 17 — SECTION DIVIDER 4
+     =========================================== -->
+<section class="slide slide-divider">
+    <div class="divider-wrap">
+        <span class="divider-label reveal">Section 04</span>
+        <div class="section-num reveal">04</div>
+        <h2 class="reveal">AWS <span class="accent">Data Services</span>.</h2>
+        <p class="divider-sub reveal">Bản đồ dịch vụ — chọn đúng service cho đúng job, tiết kiệm 50–90% chi phí.</p>
+    </div>
+</section>
+
+<!-- ===========================================
+     SLIDE 17b — DATA ON EKS ARCHITECTURE
+     =========================================== -->
+<section class="slide" style="background: #0d1117;">
+    <div class="slide-content" style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1.2rem; height:100%;">
+        <div class="reveal" style="text-align:center;">
+            <span class="eyebrow" style="background: #fe762433;"><span class="dot"></span>04 · AWS Data Platform</span>
+            <h2 style="color:#ffffff; margin-top:0.4rem;">Toàn bộ AWS Data Services trong một bức tranh.</h2>
+        </div>
+        <div class="reveal" style="flex:1; display:flex; align-items:center; justify-content:center; max-height:72vh; width:100%;">
+            <img src="W4%20%E2%80%94%20Data%20Engineering%20tr%C3%AAn%20AWS%20%C2%B7%20Kha_files/doeks-architecture.png" alt="Data on EKS — AWS Data Platform Architecture" style="max-width:100%; max-height:100%; object-fit:contain; border-radius:16px; box-shadow:0 8px 40px rgba(0,0,0,0.5);">
+        </div>
+        <div class="reveal" style="display:flex; gap:0.75rem; flex-wrap:wrap; justify-content:center;">
+            <span class="badge" style="background:#fe762433; color:#fe7624; font-size:0.8rem;">Ingestion — Kinesis · MSK · DMS · AppFlow</span>
+            <span class="badge" style="background:#007bc133; color:#00b3d9; font-size:0.8rem;">Processing — Spark · EMR · Flink · Airflow</span>
+            <span class="badge" style="background:#00b3d922; color:#00b3d9; font-size:0.8rem;">Serving — Athena · Redshift · QuickSight</span>
+            <span class="badge" style="background:#ffffff15; color:#aaa; font-size:0.75rem;">Source: github.com/awslabs/data-on-eks</span>
+        </div>
+    </div>
+    <div class="slide-footer" style="color:#698695;"><span class="section-tag" style="color:#c4d5dd;">04 · AWS Services</span><span class="trainer-tag">Kha · W4</span></div>
+</section>
+
+<!-- ===========================================
+     SLIDE 18 — INGESTION SERVICES
+     =========================================== -->
+<section class="slide">
+    <div class="slide-content slide-content-body">
+        <div class="slide-header reveal">
+            <span class="eyebrow"><span class="dot"></span>04 · Ingestion</span>
+            <h2>Đưa data vào AWS — 6 lựa chọn.</h2>
+        </div>
+
+        <table class="reveal">
+            <thead><tr><th style="width:28%">Service</th><th>Khi dùng</th></tr></thead>
+            <tbody>
+                <tr><td><strong>Kinesis Data Streams</strong></td><td>Realtime, cần replay, custom consumer</td></tr>
+                <tr><td><strong>Kinesis Firehose</strong></td><td>Managed delivery → S3/Redshift/OpenSearch — không cần code</td></tr>
+                <tr><td><strong>MSK (Managed Kafka)</strong></td><td>Đã có ecosystem Kafka, cần cross-platform</td></tr>
+                <tr><td><strong>DMS</strong></td><td>Migrate/replicate từ DB — <strong>CDC</strong> từ RDS, Oracle, SQL Server</td></tr>
+                <tr><td><strong>AppFlow</strong></td><td>SaaS → AWS (Salesforce, Google Analytics, Slack)</td></tr>
+                <tr><td><strong>DataSync</strong></td><td>On-prem file/NFS → S3</td></tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="slide-footer"><span class="section-tag">04 · AWS Services</span><span class="trainer-tag">Kha · W4</span></div>
+</section>
+
+<!-- ===========================================
+     SLIDE 19 — STORAGE SERVICES
+     =========================================== -->
+<section class="slide">
+    <div class="slide-content slide-content-body">
+        <div class="slide-header reveal">
+            <span class="eyebrow"><span class="dot"></span>04 · Storage</span>
+            <h2>Mỗi workload một sweet spot.</h2>
+        </div>
+
+        <table class="reveal">
+            <thead><tr><th style="width: 22%">Service</th><th>Sweet spot</th></tr></thead>
+            <tbody>
+                <tr><td><strong>S3</strong> <span class="badge badge-amber">default</span></td><td>Data lake · bất cứ thứ gì &gt; 1MB · giữ lâu dài</td></tr>
+                <tr><td><strong>Redshift</strong></td><td>Data warehouse · analytics SQL trên TB-PB</td></tr>
+                <tr><td><strong>Aurora</strong></td><td>Transactional workload · OLTP</td></tr>
+                <tr><td><strong>DynamoDB</strong></td><td>Key-value · single-digit ms · scale vô hạn</td></tr>
+                <tr><td><strong>OpenSearch</strong></td><td>Log analytics · full-text search</td></tr>
+                <tr><td><strong>Neptune</strong></td><td>Graph · social · fraud · recommendation</td></tr>
+                <tr><td><strong>ElastiCache</strong></td><td>Cache · session · leaderboard</td></tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="slide-footer"><span class="section-tag">04 · AWS Services</span><span class="trainer-tag">Kha · W4</span></div>
+</section>
+
+<!-- ===========================================
+     SLIDE 20 — PROCESSING SERVICES
+     =========================================== -->
+<section class="slide">
+    <div class="slide-content slide-content-body">
+        <div class="slide-header reveal">
+            <span class="eyebrow"><span class="dot"></span>04 · Processing &amp; Orchestration</span>
+            <h2>Transform &amp; orchestrate.</h2>
+        </div>
+
+        <table class="reveal">
+            <thead><tr><th style="width: 26%">Service</th><th>Khi dùng</th></tr></thead>
+            <tbody>
+                <tr><td><strong>Glue</strong> <span class="badge badge-amber">default</span></td><td>Serverless ETL · schema discovery — <strong>default choice</strong></td></tr>
+                <tr><td><strong>EMR</strong></td><td>Spark/Hadoop jobs lớn · cần tune performance</td></tr>
+                <tr><td><strong>EMR Serverless</strong></td><td>Spark nhưng không muốn quản cluster</td></tr>
+                <tr><td><strong>Lambda</strong></td><td>ETL nhỏ &lt; 15 phút · event-driven</td></tr>
+                <tr><td><strong>Step Functions</strong></td><td>Orchestrate workflow phức tạp</td></tr>
+                <tr><td><strong>MWAA (Airflow)</strong></td><td>Team đã quen Airflow</td></tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="slide-footer"><span class="section-tag">04 · AWS Services</span><span class="trainer-tag">Kha · W4</span></div>
+</section>
+
+<!-- ===========================================
+     SLIDE 21 — QUERY + ML SERVICES
+     =========================================== -->
+<section class="slide">
+    <div class="slide-content slide-content-body">
+        <div class="slide-header reveal">
+            <span class="eyebrow"><span class="dot"></span>04 · Query · BI · ML</span>
+            <h2>Serve data cho người dùng.</h2>
+        </div>
+
+        <div class="two-col stagger">
+            <div>
+                <h3 style="color: var(--brand-navy); margin-bottom: 0.6rem; font-size: var(--h3-size);">Query &amp; Analytics</h3>
+                <table>
+                    <thead><tr><th>Service</th><th>Sweet spot</th></tr></thead>
+                    <tbody>
+                        <tr><td><strong>Athena</strong></td><td>Ad-hoc SQL trên S3 · serverless</td></tr>
+                        <tr><td><strong>Redshift</strong></td><td>Dashboard · repeatable analytics</td></tr>
+                        <tr><td><strong>Redshift Spectrum</strong></td><td>Query S3 từ Redshift — lakehouse</td></tr>
+                        <tr><td><strong>QuickSight</strong></td><td>BI dashboard · SPICE engine</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div>
+                <h3 style="color: var(--brand-navy); margin-bottom: 0.6rem; font-size: var(--h3-size);">ML &amp; AI</h3>
+                <table>
+                    <thead><tr><th>Service</th><th>Mục đích</th></tr></thead>
+                    <tbody>
+                        <tr><td><strong>SageMaker</strong></td><td>Full ML lifecycle</td></tr>
+                        <tr><td><strong>Bedrock</strong></td><td>Foundation models: Claude, Llama, Titan</td></tr>
+                        <tr><td><strong>Comprehend</strong></td><td>NLP — sentiment, entity</td></tr>
+                        <tr><td><strong>Rekognition / Transcribe</strong></td><td>Ready-made AI APIs</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="slide-footer"><span class="section-tag">04 · AWS Services</span><span class="trainer-tag">Kha · W4</span></div>
+</section>
+
+<!-- ===========================================
+     SLIDE 22 — DECISION TREE
+     =========================================== -->
+<section class="slide">
+    <div class="slide-content slide-content-body">
+        <div class="slide-header reveal">
+            <span class="eyebrow"><span class="dot"></span>04 · Decision tree</span>
+            <h2>Nhanh — đây là cái bạn cần.</h2>
+        </div>
+
+<pre class="ascii reveal"><span style="color: var(--brand-orange); font-weight: 700;">?</span> Cần query SQL trên data trong S3?
+  ├─ Ad-hoc, không lặp lại       →  <strong style="color: var(--brand-orange);">Athena</strong>
+  └─ Chạy thường xuyên, join nhiều →  <strong style="color: var(--brand-orange);">Redshift Spectrum / Redshift</strong>
+
+<span style="color: var(--brand-orange); font-weight: 700;">?</span> Cần ETL?
+  ├─ Serverless, nhẹ             →  <strong style="color: var(--brand-orange);">Glue</strong>
+  ├─ Spark jobs lớn              →  <strong style="color: var(--brand-orange);">EMR / EMR Serverless</strong>
+  └─ Event-driven, nhỏ           →  <strong style="color: var(--brand-orange);">Lambda</strong>
+
+<span style="color: var(--brand-orange); font-weight: 700;">?</span> Cần streaming?
+  ├─ Cần replay, custom consumer →  <strong style="color: var(--brand-orange);">Kinesis Data Streams</strong>
+  ├─ Chỉ cần đẩy vào S3/Redshift →  <strong style="color: var(--brand-orange);">Firehose</strong>
+  └─ Đã có Kafka                 →  <strong style="color: var(--brand-orange);">MSK</strong></pre>
+    </div>
+    <div class="slide-footer"><span class="section-tag">04 · AWS Services</span><span class="trainer-tag">Kha · W4</span></div>
+</section>
+
+<!-- ===========================================
+     SLIDE 23 — COST OPTIMIZATION
+     =========================================== -->
+<section class="slide">
+    <div class="slide-content slide-content-body">
+        <div class="slide-header reveal">
+            <span class="eyebrow"><span class="dot"></span>04 · Cost optimization</span>
+            <h2>5 thói quen tiết kiệm $10k/tháng.</h2>
+        </div>
+
+        <div class="grid grid-3 stagger">
+            <div class="card">
+                <span class="badge">S3</span>
+                <div class="card-title">Intelligent-Tiering</div>
+                <div class="card-body">Lifecycle → Glacier cho cold data. Có thể giảm <strong>50–80%</strong> cost storage.</div>
+            </div>
+            <div class="card card-accent">
+                <span class="badge badge-amber">Athena</span>
+                <div class="card-title">Parquet + partition</div>
+                <div class="card-body">Giảm <strong>90% chi phí scan</strong>. Pattern quan trọng nhất trong data lake.</div>
+            </div>
+            <div class="card">
+                <span class="badge">Redshift</span>
+                <div class="card-title">Pause / Serverless</div>
+                <div class="card-body">Pause cluster khi không dùng hoặc dùng <strong>Redshift Serverless</strong>.</div>
+            </div>
+            <div class="card">
+                <span class="badge">EMR</span>
+                <div class="card-title">Spot instances</div>
+                <div class="card-body"><strong>Giảm 70–90%</strong> cho task nodes. Spot OK với Spark vì có checkpoint.</div>
+            </div>
+            <div class="card">
+                <span class="badge">Glue</span>
+                <div class="card-title">Job bookmark</div>
+                <div class="card-body">Incremental processing — tránh reprocess cùng data mỗi lần chạy.</div>
+            </div>
+            <div class="card card-dark">
+                <div class="card-title" style="color: var(--brand-amber);">Mindset</div>
+                <div class="card-body">Engineer biết tiết kiệm <strong>$10k/tháng</strong> cho công ty = engineer đắt giá.</div>
+            </div>
+        </div>
+    </div>
+    <div class="slide-footer"><span class="section-tag">04 · AWS Services</span><span class="trainer-tag">Kha · W4</span></div>
+</section>
+
+<!-- ===========================================
+     SLIDE 24 — SECTION DIVIDER 5
+     =========================================== -->
+<section class="slide slide-divider">
+    <div class="divider-wrap">
+        <span class="divider-label reveal">Section 05</span>
+        <div class="section-num reveal">05</div>
+        <h2 class="reveal">Real-world <span class="accent">Architectures</span>.</h2>
+        <p class="divider-sub reveal">5 case studies từ e-commerce, IoT, banking, sentiment đến production platform thực tế — patterns lặp đi lặp lại.</p>
+    </div>
+</section>
+
+<!-- ===========================================
+     SLIDE 25 — ARCH 1: E-COMMERCE
+     =========================================== -->
+<section class="slide">
+    <div class="slide-content slide-content-body">
+        <div class="slide-header reveal">
+            <span class="eyebrow"><span class="dot"></span>05 · Architecture 01</span>
+            <h2>E-commerce Analytics Pipeline.</h2>
+            <p class="lead"><strong>Shop online 100k đơn/ngày.</strong> Cần dashboard realtime + báo cáo ngày — hai path song song = <strong style="color: var(--brand-orange);">Lambda Architecture</strong>.</p>
+        </div>
+
+<pre class="ascii reveal">Web/App ──▶ <span style="color: var(--brand-orange);">Kinesis Data Streams</span> ──▶ Firehose ──▶ <span style="color: var(--brand-orange);">S3 (raw)</span>
+                │                                          │
+                ▼                                          ▼
+        <span style="color: var(--brand-blue);">Kinesis Analytics</span>                           Glue Crawler
+        (realtime metrics)                                 │
+                │                                          ▼
+                ▼                                    Glue Catalog
+          DynamoDB                                         │
+                │                                          ▼
+                ▼                                       <span style="color: var(--brand-orange);">Athena</span>
+        <span style="color: var(--brand-blue);">QuickSight</span>                                      │
+        (live dashboard)                                   ▼
+                                                    <span style="color: var(--brand-orange);">Redshift</span> (warehouse)
+                                                           │
+                                                           ▼
+                                                    <span style="color: var(--brand-blue);">QuickSight</span>
+                                                    (daily reports)</pre>
+
+        <div class="card reveal" style="background: var(--gradient-cta); border: none; color: #fff;">
+            <div style="font-size: var(--body-size); font-weight: 600;">
+                <strong>Tradeoff:</strong> Streaming cho live KPI (dashboard revenue theo phút), batch cho deep analytics (cohort, funnel). Không chồng lên nhau.
+            </div>
+        </div>
+    </div>
+    <div class="slide-footer"><span class="section-tag">05 · Real-world</span><span class="trainer-tag">Kha · W4</span></div>
+</section>
+
+<!-- ===========================================
+     SLIDE 26 — ARCH 2: IoT
+     =========================================== -->
+<section class="slide">
+    <div class="slide-content slide-content-body">
+        <div class="slide-header reveal">
+            <span class="eyebrow"><span class="dot"></span>05 · Architecture 02</span>
+            <h2>IoT Fleet Monitoring.</h2>
+            <p class="lead"><strong>50,000 xe tải</strong> gửi GPS + engine telemetry mỗi 10 giây. Key insight: <strong style="color: var(--brand-orange);">Timestream</strong> cho time-series — rẻ hơn Redshift cho workload này.</p>
+        </div>
+
+<pre class="ascii reveal">IoT devices ──▶ <span style="color: var(--brand-orange);">IoT Core</span> ──▶ Kinesis ──▶ Firehose ──▶ <span style="color: var(--brand-orange);">S3 (Parquet, partition by date)</span>
+                    │              │                              │
+                    │              ▼                              ▼
+                    │          <span style="color: var(--brand-blue);">Lambda</span>                         Glue ETL
+                    │       (anomaly detect)                       │
+                    │              │                              ▼
+                    │              ▼                          Redshift
+                    │          SNS alert                          │
+                    │                                              ▼
+                    ▼                                        QuickSight
+               <span style="color: var(--brand-orange);">Timestream</span>                                 (fleet dashboard)
+               (time-series)
+                    │
+                    ▼
+                 Grafana</pre>
+    </div>
+    <div class="slide-footer"><span class="section-tag">05 · Real-world</span><span class="trainer-tag">Kha · W4</span></div>
+</section>
+
+<!-- ===========================================
+     SLIDE 27 — ARCH 3: LAKEHOUSE FINANCE
+     =========================================== -->
+<section class="slide">
+    <div class="slide-content slide-content-body">
+        <div class="slide-header reveal">
+            <span class="eyebrow"><span class="dot"></span>05 · Architecture 03</span>
+            <h2>Data Lakehouse cho Finance.</h2>
+            <p class="lead"><strong>Ngân hàng — 15 hệ thống core.</strong> Cần ML fraud detection + compliance reporting. Pattern: <strong style="color: var(--brand-orange);">Medallion</strong> + Lake Formation governance.</p>
+        </div>
+
+<pre class="ascii reveal">Core Banking DBs ──▶ <span style="color: var(--brand-orange);">DMS (CDC)</span> ──▶ S3 (raw/bronze)
+                                             │
+SaaS (Salesforce) ──▶ AppFlow  ──▶ S3 ───────┤
+                                             │
+Files/SFTP  ──▶ DataSync       ──▶ S3 ───────┘
+                                             │
+                                             ▼
+                                        <span style="color: var(--brand-blue);">Glue Jobs</span>
+                                       (clean, dedupe)
+                                             │
+                                             ▼
+                               S3 (curated/silver) ──▶ <span style="color: var(--brand-orange);">Lake Formation</span>
+                                             │           (governance, row/col ACL)
+                                   ┌─────────┴──────────┐
+                                   ▼                    ▼
+                              <span style="color: var(--brand-blue);">Glue Jobs</span>             <span style="color: var(--brand-orange);">SageMaker</span>
+                              (aggregate)            (fraud model)
+                                   │                    │
+                                   ▼                    ▼
+                          S3 (consumption/gold)     Endpoint
+                                   │                    │
+                         ┌─────────┴──────┐             │
+                         ▼                ▼             ▼
+                       Athena        Redshift          App
+                         │                │
+                         ▼                ▼
+                    QuickSight      QuickSight</pre>
+    </div>
+    <div class="slide-footer"><span class="section-tag">05 · Real-world</span><span class="trainer-tag">Kha · W4</span></div>
+</section>
+
+<!-- ===========================================
+     SLIDE 28 — ARCH 4: SENTIMENT
+     =========================================== -->
+<section class="slide">
+    <div class="slide-content slide-content-body">
+        <div class="slide-header reveal">
+            <span class="eyebrow"><span class="dot"></span>05 · Architecture 04</span>
+            <h2>Social Media Sentiment.</h2>
+            <p class="lead"><strong>Brand monitoring realtime.</strong> Key insight: không cần train model — <strong style="color: var(--brand-orange);">Comprehend</strong> làm sentiment analysis sẵn.</p>
+        </div>
+
+<pre class="ascii reveal">Scraper (ECS) ──▶ <span style="color: var(--brand-orange);">Kinesis</span> ──▶ <span style="color: var(--brand-blue);">Lambda</span> ──▶ <span style="color: var(--brand-orange);">Comprehend</span> (sentiment)
+                                  │                │
+                                  ▼                ▼
+                              S3 (raw)        DynamoDB
+                                              (current state)
+                                                   │
+                                                   ▼
+                                             Lambda + SNS
+                                             (alert nếu spike negative)
+                                  │
+                                  ▼
+                              Glue ETL
+                                  │
+                                  ▼
+                              <span style="color: var(--brand-orange);">OpenSearch</span>
+                                  │
+                                  ▼
+                         OpenSearch Dashboards
+                         (exploratory analysis)</pre>
+
+        <div class="card reveal card-accent">
+            <div class="card-body" style="font-size: var(--body-size);">
+                <strong>Principle:</strong> Dùng <strong>managed AI APIs</strong> (Comprehend/Rekognition/Transcribe) trước khi nghĩ đến train model custom. Rẻ hơn, nhanh hơn, đủ tốt cho 80% use case.
+            </div>
+        </div>
+    </div>
+    <div class="slide-footer"><span class="section-tag">05 · Real-world</span><span class="trainer-tag">Kha · W4</span></div>
+</section>
+
+<!-- ===========================================
+     SLIDE 28b — ARCH 5: PRODUCTION DEPLOYMENT
+     =========================================== -->
+<section class="slide" style="background: #0d1117;">
+    <div class="slide-content" style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1.2rem; height:100%;">
+        <div class="reveal" style="text-align:center;">
+            <span class="eyebrow" style="background: #fe762433;"><span class="dot"></span>05 · Architecture 05 — Real production system</span>
+            <h2 style="color:#ffffff; margin-top:0.4rem;">XOps Data Platform — AWS Deployment.</h2>
+        </div>
+        <div class="reveal" style="flex:1; display:flex; align-items:center; justify-content:center; max-height:68vh; width:100%;">
+            <img src="W4%20%E2%80%94%20Data%20Engineering%20tr%C3%AAn%20AWS%20%C2%B7%20Kha_files/img_deployment_architecture.png" alt="XOps Data Platform — AWS Deployment Architecture" style="max-width:100%; max-height:100%; object-fit:contain; border-radius:16px; box-shadow:0 8px 40px rgba(0,0,0,0.5);">
+        </div>
+        <div class="reveal" style="display:flex; gap:0.75rem; flex-wrap:wrap; justify-content:center;">
+            <span class="badge" style="background:#fe762422; color:#fe7624; font-size:0.8rem;">Airflow on ECS — tiết kiệm hơn MWAA</span>
+            <span class="badge" style="background:#007bc122; color:#007bc1; font-size:0.8rem;">DBT runs as Airflow task</span>
+            <span class="badge" style="background:#00b3d922; color:#00b3d9; font-size:0.8rem;">FastAPI layer — decouple serving</span>
+            <span class="badge" style="background:#85439a22; color:#b060d0; font-size:0.8rem;">PostgreSQL: bronze/silver/gold schemas</span>
+        </div>
+    </div>
+    <div class="slide-footer" style="color:#698695;"><span class="section-tag" style="color:#c4d5dd;">05 · Real-world</span><span class="trainer-tag">Kha · W4</span></div>
+</section>
+
+<!-- ===========================================
+     SLIDE 29 — COMMON PITFALLS
+     =========================================== -->
+<section class="slide">
+    <div class="slide-content slide-content-body">
+        <div class="slide-header reveal">
+            <span class="eyebrow"><span class="dot"></span>05 · Học từ failure</span>
+            <h2>5 sai lầm đốt tiền &amp; đốt niềm tin.</h2>
+        </div>
+
+        <div class="grid grid-2 stagger">
+            <div class="card">
+                <span class="badge badge-amber">Pitfall 01</span>
+                <div class="card-title">Streaming-first cho mọi thứ</div>
+                <div class="card-body">Đốt tiền vô lý. <strong>80% use case batch là đủ.</strong> Chỉ streaming khi sub-minute latency thực sự là business requirement.</div>
+            </div>
+            <div class="card">
+                <span class="badge badge-amber">Pitfall 02</span>
+                <div class="card-title">Không partition S3 data</div>
+                <div class="card-body">Athena scan full, <strong>bill shock</strong>. Một query đáng $0.01 thành $100.</div>
+            </div>
+            <div class="card">
+                <span class="badge badge-amber">Pitfall 03</span>
+                <div class="card-title">Skip data quality checks</div>
+                <div class="card-body">Downstream dashboard sai → <strong>mất niềm tin</strong>. Một khi mất, rất khó lấy lại.</div>
+            </div>
+            <div class="card">
+                <span class="badge badge-amber">Pitfall 04</span>
+                <div class="card-title">Monolithic pipeline</div>
+                <div class="card-body">Fail 1 bước, rerun cả 4 giờ. Thiết kế <strong>idempotent + checkpoint</strong> ngay từ đầu.</div>
+            </div>
+            <div class="card card-dark" style="grid-column: span 2;">
+                <span class="badge" style="background: var(--brand-amber); color: var(--brand-navy);">Pitfall 05</span>
+                <div class="card-title" style="color: #fff;">Không có catalog</div>
+                <div class="card-body">6 tháng sau <strong>không ai biết table nào là gì</strong>. Data lake biến thành data swamp. Catalog không phải "nice to have" — là "must have" từ ngày 1.</div>
+            </div>
+        </div>
+    </div>
+    <div class="slide-footer"><span class="section-tag">05 · Real-world</span><span class="trainer-tag">Kha · W4</span></div>
+</section>
+
+<!-- ===========================================
+     SLIDE 30 — SECTION DIVIDER 6
+     =========================================== -->
+<section class="slide slide-divider">
+    <div class="divider-wrap">
+        <span class="divider-label reveal">Section 06</span>
+        <div class="section-num reveal">06</div>
+        <h2 class="reveal">Q&amp;A + <span class="accent">Định hướng nghề nghiệp</span>.</h2>
+        <p class="divider-sub reveal">Career path · Lương · Roadmap 12 tháng · Portfolio · Interview — và Q&amp;A mở.</p>
+    </div>
+</section>
+
+<!-- ===========================================
+     SLIDE 34 — CAREER PATH
+     =========================================== -->
+<section class="slide">
+    <div class="slide-content slide-content-body">
+        <div class="slide-header reveal">
+            <span class="eyebrow"><span class="dot"></span>06 · Career path</span>
+            <h2>Từ fresher đến Staff+ Principal.</h2>
+        </div>
+
+        <div class="ladder stagger">
+            <div class="rung">
+                <span class="level">L0</span>
+                <span class="role"><strong>Junior DE</strong> · 0–2 năm <small>SQL, Python, 1 cloud (fundamentals)</small></span>
+                <span class="branches">→ Data Analyst</span>
+            </div>
+            <div class="rung">
+                <span class="level">L1</span>
+                <span class="role"><strong>Mid DE</strong> · 2–4 năm <small>Spark, streaming, data modeling, modular pipelines</small></span>
+                <span class="branches">→ Analytics Eng (dbt)</span>
+            </div>
+            <div class="rung senior">
+                <span class="level">L2</span>
+                <span class="role"><strong>Senior DE</strong> · 4–7 năm <small>Architecture, cost, mentor, cross-team design</small></span>
+                <span class="branches">→ ML Eng · Platform Eng</span>
+            </div>
+            <div class="rung staff">
+                <span class="level">L3+</span>
+                <span class="role"><strong>Staff / Principal DE</strong> · 7+ năm <small>Strategy, tổ chức, ảnh hưởng cross-org</small></span>
+                <span class="branches">→ Data Architect · EM</span>
+            </div>
+        </div>
+    </div>
+    <div class="slide-footer"><span class="section-tag">06 · Career</span><span class="trainer-tag">Kha · W4</span></div>
+</section>
+
+<!-- ===========================================
+     SLIDE 35 — SALARY + ROADMAP
+     =========================================== -->
+<section class="slide">
+    <div class="slide-content slide-content-body">
+        <div class="slide-header reveal">
+            <span class="eyebrow"><span class="dot"></span>06 · Lương &amp; Roadmap</span>
+            <h2>Con số thực tế + kế hoạch 12 tháng.</h2>
+        </div>
+
+        <div class="two-col stagger">
+            <div>
+                <h3 style="color: var(--brand-navy); margin-bottom: 0.5rem;">Mức lương (VN, 2026)</h3>
+                <table>
+                    <thead><tr><th>Level</th><th>Range (triệu/tháng)</th></tr></thead>
+                    <tbody>
+                        <tr><td><strong>Fresher</strong></td><td>15 – 25</td></tr>
+                        <tr><td><strong>Junior</strong></td><td>25 – 40</td></tr>
+                        <tr><td><strong>Mid</strong></td><td>40 – 70</td></tr>
+                        <tr><td><strong>Senior</strong></td><td>70 – 120</td></tr>
+                        <tr><td><strong>Staff+</strong></td><td>120 +</td></tr>
+                    </tbody>
+                </table>
+                <p style="margin-top: 0.5rem; font-size: var(--small-size); color: var(--brand-orange); font-weight: 600;">
+                    Remote / freelance / global company: +30–100%.
+                </p>
+            </div>
+            <div>
+                <h3 style="color: var(--brand-navy); margin-bottom: 0.5rem;">Roadmap 12 tháng</h3>
+                <div style="display: flex; flex-direction: column; gap: 0.45rem;">
+                    <div class="card" style="padding: 0.6rem 0.9rem;">
+                        <div style="display: flex; align-items: center; gap: 0.6rem;">
+                            <span class="badge badge-amber">M1–3</span>
+                            <strong style="color: var(--brand-navy); font-size: var(--small-size);">Nền tảng</strong>
+                        </div>
+                        <div style="font-size: var(--small-size); color: var(--text-secondary); margin-top: 0.25rem;">SQL advanced · Python · AWS fundamentals (CP + SAA)</div>
+                    </div>
+                    <div class="card" style="padding: 0.6rem 0.9rem;">
+                        <div style="display: flex; align-items: center; gap: 0.6rem;">
+                            <span class="badge badge-amber">M4–6</span>
+                            <strong style="color: var(--brand-navy); font-size: var(--small-size);">Big data</strong>
+                        </div>
+                        <div style="font-size: var(--small-size); color: var(--text-secondary); margin-top: 0.25rem;">Spark (PySpark) · Airflow/Step Functions · Parquet + partition</div>
+                    </div>
+                    <div class="card" style="padding: 0.6rem 0.9rem;">
+                        <div style="display: flex; align-items: center; gap: 0.6rem;">
+                            <span class="badge badge-amber">M7–9</span>
+                            <strong style="color: var(--brand-navy); font-size: var(--small-size);">Streaming &amp; advanced</strong>
+                        </div>
+                        <div style="font-size: var(--small-size); color: var(--text-secondary); margin-top: 0.25rem;">Kafka/Kinesis · dbt · 1 project end-to-end trên GitHub</div>
+                    </div>
+                    <div class="card card-accent" style="padding: 0.6rem 0.9rem;">
+                        <div style="display: flex; align-items: center; gap: 0.6rem;">
+                            <span class="badge badge-amber">M10–12</span>
+                            <strong style="color: var(--brand-navy); font-size: var(--small-size);">Specialization</strong>
+                        </div>
+                        <div style="font-size: var(--small-size); color: var(--text-secondary); margin-top: 0.25rem;">Chọn 1 hướng · AWS Data Analytics Specialty · OSS / blog</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="slide-footer"><span class="section-tag">06 · Career</span><span class="trainer-tag">Kha · W4</span></div>
+</section>
+
+<!-- ===========================================
+     SLIDE 36 — PORTFOLIO + INTERVIEW
+     =========================================== -->
+<section class="slide">
+    <div class="slide-content slide-content-body">
+        <div class="slide-header reveal">
+            <span class="eyebrow"><span class="dot"></span>06 · Portfolio &amp; Interview</span>
+            <h2>Cái gì "bán được" khi phỏng vấn?</h2>
+        </div>
+
+        <div class="two-col stagger">
+            <div>
+                <h3 style="color: var(--brand-navy); margin-bottom: 0.5rem; font-size: var(--h3-size);">Portfolio 5 tầng</h3>
+                <ul class="bullets">
+                    <li><strong>End-to-end project</strong> trên GitHub — ingest → transform → serve, README rõ ràng</li>
+                    <li><strong>Blog post</strong> giải thích 1 concept — chứng minh khả năng communicate</li>
+                    <li><strong>OSS contribution</strong> — dbt, Airflow, Spark plugins</li>
+                    <li><strong>Certification</strong> — AWS Data Analytics / Solutions Architect</li>
+                    <li><strong>Domain knowledge</strong> — e-commerce, fintech, adtech → paid premium</li>
+                </ul>
+            </div>
+            <div>
+                <h3 style="color: var(--brand-navy); margin-bottom: 0.5rem; font-size: var(--h3-size);">7 câu hỏi phỏng vấn thường gặp</h3>
+                <ul class="bullets">
+                    <li>ETL vs ELT — khi nào chọn cái nào?</li>
+                    <li>Design data pipeline cho {e-commerce / IoT / social media}</li>
+                    <li>Tối ưu query Athena đang chậm?</li>
+                    <li>Partition key trong DynamoDB chọn thế nào?</li>
+                    <li>SCD Type 1/2/3 — khi nào dùng?</li>
+                    <li>Xử lý late-arriving data trong streaming?</li>
+                    <li>Cost optimization cho Redshift cluster 24/7?</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="slide-footer"><span class="section-tag">06 · Career</span><span class="trainer-tag">Kha · W4</span></div>
+</section>
+
+<!-- ===========================================
+     SLIDE 37 — CLOSING + Q&A
+     =========================================== -->
+<section class="slide slide-closing">
+    <div class="closing-wrap">
+        <span class="eyebrow reveal"><span class="dot"></span>Q&amp;A · Open floor</span>
+        <h1 class="reveal">Cảm ơn các bạn.<br><span class="gradient-text">Hỏi gì cũng được.</span></h1>
+        <p class="reveal" style="font-size: clamp(0.95rem, 1.5vw, 1.2rem); color: var(--text-secondary); max-width: 780px;">
+            Kỹ thuật · career · lương · cách học · chọn job · chuyển ngành — sẵn sàng mentor cho những ai nghiêm túc.
+            Kết nối qua LinkedIn hoặc Slack sau buổi học.
+        </p>
+
+        <div class="grid grid-2 stagger" style="max-width: 1000px;">
+            <div class="card card-dark">
+                <div class="card-title" style="color: var(--brand-amber);">5 Mindset để thành công</div>
+                <ul class="bullets" style="margin-top: 0.3rem;">
+                    <li style="color: #fff;"><strong style="color: #fff;">Fundamentals &gt; Tools</strong> — tool đổi 2 năm, SQL/modeling thì không</li>
+                    <li style="color: #fff;"><strong style="color: #fff;">Build &gt; Study</strong> — 1 project deploy thật &gt; 10 khóa học</li>
+                    <li style="color: #fff;"><strong style="color: #fff;">Understand the business</strong> — DE giỏi nhất hiểu WHY</li>
+                    <li style="color: #fff;"><strong style="color: #fff;">Write &gt; Code</strong> — doc, PR, design doc tốt = senior</li>
+                    <li style="color: #fff;"><strong style="color: #fff;">Cost awareness</strong> — tiết kiệm $10k/tháng = đắt giá</li>
+                </ul>
+            </div>
+            <div class="card card-accent">
+                <div class="card-title">3 Sách phải đọc</div>
+                <ul class="bullets" style="margin-top: 0.3rem;">
+                    <li><strong>Designing Data-Intensive Applications</strong> — Martin Kleppmann <em>(bible)</em></li>
+                    <li><strong>Fundamentals of Data Engineering</strong> — Reis &amp; Housley</li>
+                    <li><strong>The Data Warehouse Toolkit</strong> — Ralph Kimball <em>(dimensional modeling)</em></li>
+                </ul>
+                <div style="margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid var(--border-light); font-size: var(--small-size); color: var(--text-secondary);">
+                    <strong style="color: var(--brand-navy);">Online:</strong> AWS Skill Builder · DataTalks.Club Zoomcamp · r/dataengineering · Data Engineering Vietnam
+                </div>
+            </div>
+        </div>
+
+        <div class="reveal" style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem;">
+            <span style="display: inline-flex; gap: 0.5rem; align-items: center; padding: 8px 18px; border-radius: 80px; background: var(--surface-white); border: 1px solid var(--border); font-size: var(--small-size); font-weight: 600; color: var(--brand-navy); box-shadow: var(--shadow-card);">
+                <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--brand-orange);"></span>Trainer · Kha
+            </span>
+            <span style="display: inline-flex; gap: 0.5rem; align-items: center; padding: 8px 18px; border-radius: 80px; background: var(--gradient-cta); color: #fff; font-size: var(--small-size); font-weight: 700;">
+                TechX × AWS Accelerator · W4
+            </span>
+        </div>
+    </div>
+</section>
+
+<script>
+/* ===========================================
+   SLIDE PRESENTATION CONTROLLER
+   Handles navigation, progress bar, visibility
+   =========================================== */
+class SlidePresentation {
+    constructor() {
+        this.slides = Array.from(document.querySelectorAll('.slide'));
+        this.currentSlide = 0;
+        this.navDotsContainer = document.getElementById('navDots');
+        this.progressBar = document.getElementById('progress');
+        this.counter = document.getElementById('counter');
+
+        this.setupNavDots();
+        this.setupIntersectionObserver();
+        this.setupKeyboardNav();
+        this.setupTouchNav();
+        this.setupWheelNav();
+        this.updateCounter(0);
+        this.updateProgress();
+    }
+
+    /* Generate navigation dots — one per slide.
+       IMPORTANT: clear container first. */
+    setupNavDots() {
+        this.navDotsContainer.innerHTML = '';
+        this.slides.forEach((_, i) => {
+            const btn = document.createElement('button');
+            btn.setAttribute('aria-label', `Go to slide ${i + 1}`);
+            btn.addEventListener('click', () => this.goTo(i));
+            this.navDotsContainer.appendChild(btn);
+        });
+    }
+
+    /* Reveal slides when they scroll into view, and track current index */
+    setupIntersectionObserver() {
+        const obs = new IntersectionObserver((entries) => {
+            entries.forEach((e) => {
+                if (e.isIntersecting) {
+                    e.target.classList.add('visible');
+                    const idx = this.slides.indexOf(e.target);
+                    if (idx >= 0) {
+                        this.currentSlide = idx;
+                        this.updateCounter(idx);
+                        this.updateProgress();
+                        this.updateActiveDot(idx);
+                    }
+                }
+            });
+        }, { threshold: 0.5 });
+        this.slides.forEach((s) => obs.observe(s));
+    }
+
+    setupKeyboardNav() {
+        document.addEventListener('keydown', (e) => {
+            switch (e.key) {
+                case 'ArrowDown':
+                case 'ArrowRight':
+                case 'PageDown':
+                case ' ':
+                    e.preventDefault();
+                    this.next();
+                    break;
+                case 'ArrowUp':
+                case 'ArrowLeft':
+                case 'PageUp':
+                    e.preventDefault();
+                    this.prev();
+                    break;
+                case 'Home':
+                    e.preventDefault();
+                    this.goTo(0);
+                    break;
+                case 'End':
+                    e.preventDefault();
+                    this.goTo(this.slides.length - 1);
+                    break;
+            }
+        });
+    }
+
+    setupTouchNav() {
+        let startY = 0;
+        document.addEventListener('touchstart', (e) => { startY = e.touches[0].clientY; }, { passive: true });
+        document.addEventListener('touchend', (e) => {
+            const delta = startY - e.changedTouches[0].clientY;
+            if (Math.abs(delta) > 60) {
+                if (delta > 0) this.next(); else this.prev();
+            }
+        }, { passive: true });
+    }
+
+    setupWheelNav() {
+        let busy = false;
+        document.addEventListener('wheel', (e) => {
+            if (busy) return;
+            if (Math.abs(e.deltaY) < 30) return;
+            busy = true;
+            setTimeout(() => { busy = false; }, 600);
+            if (e.deltaY > 0) this.next(); else this.prev();
+        }, { passive: true });
+    }
+
+    next() { this.goTo(Math.min(this.currentSlide + 1, this.slides.length - 1)); }
+    prev() { this.goTo(Math.max(this.currentSlide - 1, 0)); }
+
+    goTo(idx) {
+        this.slides[idx].scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    updateActiveDot(idx) {
+        const dots = this.navDotsContainer.querySelectorAll('button');
+        dots.forEach((d, i) => d.classList.toggle('active', i === idx));
+    }
+
+    updateCounter(idx) {
+        const total = String(this.slides.length).padStart(2, '0');
+        const current = String(idx + 1).padStart(2, '0');
+        this.counter.innerHTML = `<strong>${current}</strong> / ${total}`;
+    }
+
+    updateProgress() {
+        const pct = ((this.currentSlide + 1) / this.slides.length) * 100;
+        this.progressBar.style.width = pct + '%';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    new SlidePresentation();
+});
+</script>
+
+
+</body></html>

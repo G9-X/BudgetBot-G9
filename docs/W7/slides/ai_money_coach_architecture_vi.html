@@ -1,0 +1,1007 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AI Money Coach | Kien truc va Chi phi W7</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #071713;
+        --paper: #0d231d;
+        --paper-2: #112c25;
+        --ink: #f3eee3;
+        --muted: #a3b7ac;
+        --line: rgba(241, 232, 214, 0.13);
+        --mint: #68e3ae;
+        --gold: #efbd69;
+        --red: #f07c63;
+        --blue: #80bffc;
+        --shadow: rgba(0, 0, 0, 0.35);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        overflow: hidden;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: "Be Vietnam Pro", sans-serif;
+      }
+
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        opacity: 0.38;
+        background:
+          radial-gradient(circle at 18% 14%, rgba(104, 227, 174, 0.12), transparent 31%),
+          radial-gradient(circle at 82% 74%, rgba(239, 189, 105, 0.12), transparent 28%),
+          repeating-linear-gradient(
+            0deg,
+            transparent 0,
+            transparent 47px,
+            rgba(255, 255, 255, 0.025) 48px
+          );
+      }
+
+      .progress {
+        position: fixed;
+        z-index: 20;
+        top: 0;
+        left: 0;
+        height: 4px;
+        background: var(--mint);
+        transition: width 320ms ease;
+      }
+
+      .brand {
+        position: fixed;
+        z-index: 10;
+        top: 28px;
+        left: 46px;
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        color: var(--muted);
+        font: 500 12px/1 "IBM Plex Mono", monospace;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+      }
+
+      .brand::before {
+        content: "";
+        width: 12px;
+        height: 12px;
+        border: 2px solid var(--mint);
+        transform: rotate(45deg);
+      }
+
+      .deck {
+        display: flex;
+        height: 100vh;
+        transition: transform 420ms cubic-bezier(0.2, 0.85, 0.25, 1);
+      }
+
+      .slide {
+        position: relative;
+        flex: 0 0 100vw;
+        height: 100vh;
+        padding: min(10vh, 92px) clamp(46px, 6vw, 100px) 68px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        overflow: hidden;
+      }
+
+      .slide::after {
+        content: attr(data-page);
+        position: absolute;
+        right: 48px;
+        bottom: 28px;
+        color: var(--muted);
+        font: 500 12px/1 "IBM Plex Mono", monospace;
+        letter-spacing: 0.12em;
+      }
+
+      .slide .reveal {
+        transform: translateY(18px);
+        opacity: 0;
+        transition: transform 480ms ease, opacity 480ms ease;
+      }
+
+      .slide.active .reveal {
+        transform: none;
+        opacity: 1;
+      }
+
+      .slide.active .delay-1 {
+        transition-delay: 90ms;
+      }
+
+      .slide.active .delay-2 {
+        transition-delay: 170ms;
+      }
+
+      .slide.active .delay-3 {
+        transition-delay: 250ms;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        width: fit-content;
+        gap: 10px;
+        align-items: center;
+        color: var(--gold);
+        font: 500 clamp(12px, 1.1vw, 14px)/1 "IBM Plex Mono", monospace;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        margin-bottom: 22px;
+      }
+
+      .eyebrow::before {
+        content: "";
+        width: 36px;
+        height: 1px;
+        background: var(--gold);
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin: 0;
+      }
+
+      h1 {
+        max-width: 920px;
+        font-size: clamp(52px, 6.8vw, 104px);
+        font-weight: 800;
+        letter-spacing: -0.065em;
+        line-height: 0.98;
+      }
+
+      h2 {
+        max-width: 1100px;
+        font-size: clamp(36px, 4.2vw, 66px);
+        font-weight: 750;
+        letter-spacing: -0.055em;
+        line-height: 1.04;
+        margin-bottom: clamp(24px, 4vh, 44px);
+      }
+
+      h3 {
+        font-size: clamp(16px, 1.45vw, 22px);
+        font-weight: 650;
+        margin-bottom: 10px;
+      }
+
+      .accent {
+        color: var(--mint);
+      }
+
+      .gold {
+        color: var(--gold);
+      }
+
+      .lede {
+        margin-top: 28px;
+        max-width: 770px;
+        color: var(--muted);
+        font-size: clamp(18px, 1.55vw, 25px);
+        line-height: 1.6;
+      }
+
+      .meta {
+        margin-top: 62px;
+        display: flex;
+        gap: 32px;
+        color: var(--muted);
+        font: 500 13px/1.5 "IBM Plex Mono", monospace;
+        letter-spacing: 0.06em;
+      }
+
+      .grid-2,
+      .grid-3,
+      .grid-4 {
+        display: grid;
+        gap: 16px;
+      }
+
+      .grid-2 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .grid-3 {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .grid-4 {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+
+      .card {
+        min-height: 136px;
+        border: 1px solid var(--line);
+        background: rgba(17, 44, 37, 0.62);
+        border-radius: 18px;
+        padding: clamp(18px, 2vw, 28px);
+      }
+
+      .card p,
+      .note {
+        color: var(--muted);
+        font-size: clamp(14px, 1.12vw, 18px);
+        line-height: 1.55;
+      }
+
+      .number {
+        color: var(--gold);
+        display: block;
+        font: 600 clamp(30px, 3vw, 50px)/1 "IBM Plex Mono", monospace;
+        margin-bottom: 14px;
+      }
+
+      .risk {
+        border-color: rgba(240, 124, 99, 0.32);
+      }
+
+      .risk h3 {
+        color: var(--red);
+      }
+
+      .good {
+        border-color: rgba(104, 227, 174, 0.32);
+      }
+
+      .good h3 {
+        color: var(--mint);
+      }
+
+      .pipeline {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 12px;
+        align-items: stretch;
+      }
+
+      .step {
+        position: relative;
+        min-height: 180px;
+        padding: 23px 18px;
+        background: var(--paper-2);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+      }
+
+      .step:not(:last-child)::after {
+        content: ">";
+        position: absolute;
+        right: -14px;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 2;
+        display: grid;
+        place-items: center;
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: var(--gold);
+        color: var(--bg);
+        font: 700 16px/1 "IBM Plex Mono", monospace;
+      }
+
+      .step code,
+      .mono {
+        font-family: "IBM Plex Mono", monospace;
+      }
+
+      .step .index {
+        display: block;
+        color: var(--gold);
+        font: 500 13px/1 "IBM Plex Mono", monospace;
+        margin-bottom: 18px;
+      }
+
+      .step strong {
+        display: block;
+        font-size: clamp(15px, 1.25vw, 19px);
+        margin-bottom: 10px;
+      }
+
+      .step small {
+        display: block;
+        color: var(--muted);
+        font-size: clamp(12px, 0.92vw, 15px);
+        line-height: 1.5;
+      }
+
+      .architecture {
+        display: grid;
+        grid-template-columns: 1.1fr auto 1.1fr auto 1.2fr;
+        gap: 16px;
+        align-items: center;
+      }
+
+      .node {
+        padding: 20px;
+        border-radius: 16px;
+        border: 1px solid var(--line);
+        background: var(--paper-2);
+      }
+
+      .node strong {
+        display: block;
+        margin-bottom: 8px;
+        font-size: clamp(15px, 1.3vw, 20px);
+      }
+
+      .node span {
+        color: var(--muted);
+        font-size: clamp(12px, 1vw, 15px);
+      }
+
+      .arrow {
+        color: var(--gold);
+        font: 600 24px "IBM Plex Mono", monospace;
+      }
+
+      .services {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+        margin-top: 22px;
+      }
+
+      .services .node {
+        padding: 16px;
+        border-color: rgba(104, 227, 174, 0.25);
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        background: rgba(17, 44, 37, 0.54);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        overflow: hidden;
+        font-size: clamp(13px, 1.02vw, 16px);
+      }
+
+      th {
+        color: var(--muted);
+        font: 500 12px/1.3 "IBM Plex Mono", monospace;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+      }
+
+      th,
+      td {
+        text-align: left;
+        padding: clamp(10px, 1.1vw, 15px) 18px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      tr:last-child td {
+        border-bottom: 0;
+      }
+
+      td:last-child,
+      th:last-child {
+        text-align: right;
+      }
+
+      .total td {
+        color: var(--mint);
+        background: rgba(104, 227, 174, 0.08);
+        font-weight: 700;
+      }
+
+      .split {
+        display: grid;
+        grid-template-columns: 1.05fr 0.95fr;
+        gap: clamp(22px, 4vw, 48px);
+        align-items: start;
+      }
+
+      .callout {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        min-height: 350px;
+        padding: 30px;
+        background:
+          linear-gradient(140deg, rgba(104, 227, 174, 0.16), transparent 48%),
+          var(--paper-2);
+        border: 1px solid rgba(104, 227, 174, 0.26);
+        border-radius: 22px;
+      }
+
+      .big-cost {
+        color: var(--mint);
+        font: 600 clamp(56px, 6vw, 94px)/1 "IBM Plex Mono", monospace;
+        letter-spacing: -0.05em;
+      }
+
+      .barset {
+        display: flex;
+        height: 270px;
+        gap: 34px;
+        align-items: end;
+        padding: 0 30px;
+      }
+
+      .bar-wrap {
+        flex: 1;
+        text-align: center;
+      }
+
+      .bar {
+        height: var(--height);
+        background: var(--mint);
+        border-radius: 12px 12px 3px 3px;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        padding-top: 15px;
+        color: var(--bg);
+        font: 600 clamp(14px, 1.15vw, 18px)/1 "IBM Plex Mono", monospace;
+      }
+
+      .bar.alt {
+        background: var(--gold);
+      }
+
+      .bar-label {
+        margin-top: 14px;
+        color: var(--muted);
+        font-size: clamp(12px, 1vw, 15px);
+      }
+
+      .checklist {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: grid;
+        gap: 14px;
+      }
+
+      .checklist li {
+        display: flex;
+        gap: 13px;
+        align-items: start;
+        color: var(--muted);
+        font-size: clamp(15px, 1.2vw, 19px);
+        line-height: 1.45;
+      }
+
+      .checklist li::before {
+        content: "✓";
+        color: var(--mint);
+        font-weight: 700;
+      }
+
+      .footer-note {
+        margin-top: 22px;
+        color: var(--muted);
+        font-size: clamp(12px, 0.95vw, 15px);
+      }
+
+      .controls {
+        position: fixed;
+        z-index: 20;
+        right: 42px;
+        bottom: 22px;
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+
+      button {
+        border: 1px solid var(--line);
+        background: var(--paper);
+        color: var(--ink);
+        border-radius: 999px;
+        padding: 9px 15px;
+        cursor: pointer;
+        font: 500 12px/1 "IBM Plex Mono", monospace;
+        transition: border-color 180ms ease, color 180ms ease;
+      }
+
+      button:hover:not(:disabled) {
+        border-color: var(--mint);
+        color: var(--mint);
+      }
+
+      button:disabled {
+        opacity: 0.35;
+        cursor: default;
+      }
+
+      .counter {
+        color: var(--muted);
+        margin: 0 8px;
+        font: 500 12px/1 "IBM Plex Mono", monospace;
+      }
+
+      @media (max-width: 900px) {
+        .slide {
+          overflow-y: auto;
+          padding: 78px 28px 70px;
+          justify-content: flex-start;
+        }
+
+        .brand {
+          top: 20px;
+          left: 28px;
+        }
+
+        .grid-2,
+        .grid-3,
+        .grid-4,
+        .pipeline,
+        .architecture,
+        .services,
+        .split {
+          grid-template-columns: 1fr;
+        }
+
+        .step:not(:last-child)::after,
+        .arrow {
+          display: none;
+        }
+      }
+
+      @media print {
+        html,
+        body {
+          height: auto;
+          overflow: visible;
+          background: #fff;
+          color: #091914;
+        }
+
+        body::before,
+        .brand,
+        .progress,
+        .controls {
+          display: none;
+        }
+
+        .deck {
+          display: block;
+          transform: none !important;
+          height: auto;
+        }
+
+        .slide {
+          page-break-after: always;
+          min-height: 100vh;
+          color: #091914;
+          background: #fff;
+        }
+
+        .slide .reveal {
+          opacity: 1;
+          transform: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="progress" id="progress"></div>
+    <div class="brand">W7 / Domain B / Architecture Defense</div>
+
+    <main class="deck" id="deck">
+      <section class="slide active" data-page="01 / 11">
+        <div class="eyebrow reveal">AI Money Coach</div>
+        <h1 class="reveal delay-1">
+          Biến sao kê bẩn thành <span class="accent">insight đáng tin.</span>
+        </h1>
+        <p class="lede reveal delay-2">
+          Kiến trúc hybrid phân loại giao dịch, đưa trường hợp không chắc chắn
+          về cho con người kiểm duyệt, và triển khai trong giới hạn chi phí W7.
+        </p>
+        <div class="meta reveal delay-3">
+          <span>DOMAIN B / FINTECH</span>
+          <span>AP-SOUTHEAST-1</span>
+          <span>27.05.2026</span>
+        </div>
+      </section>
+
+      <section class="slide" data-page="02 / 11">
+        <div class="eyebrow reveal">Vấn đề cần giải quyết</div>
+        <h2 class="reveal delay-1">
+          Giao dịch ngân hàng không tự nói lên <span class="gold">ý nghĩa</span>.
+        </h2>
+        <div class="grid-4 reveal delay-2">
+          <article class="card">
+            <span class="number">01</span>
+            <h3>VINMART HCM 04</h3>
+            <p>Thực phẩm hay mua sắm gia dụng?</p>
+          </article>
+          <article class="card">
+            <span class="number">02</span>
+            <h3>T1908 GRAB CITY</h3>
+            <p>Di chuyển hay GrabFood?</p>
+          </article>
+          <article class="card risk">
+            <span class="number">03</span>
+            <h3>FT0024112501</h3>
+            <p>Mã hoàn toàn mơ hồ: không được tự đoán.</p>
+          </article>
+          <article class="card">
+            <span class="number">04</span>
+            <h3>SHOPEE MACBOOK</h3>
+            <p>Cá nhân, công việc hay khoản bất thường?</p>
+          </article>
+        </div>
+        <p class="footer-note reveal delay-3">
+          Mục tiêu đánh giá W7: confidence, ambiguity handling, accuracy trên
+          30+ dòng đã gán nhãn và failure cases có cách xử lý cụ thể.
+        </p>
+      </section>
+
+      <section class="slide" data-page="03 / 11">
+        <div class="eyebrow reveal">Quyết định cốt lõi</div>
+        <h2 class="reveal delay-1">
+          Không gửi tất cả cho LLM. <span class="accent">Lọc trước, hỏi sau.</span>
+        </h2>
+        <div class="pipeline reveal delay-2">
+          <div class="step">
+            <span class="index">01 / INPUT</span>
+            <strong>Upload CSV</strong>
+            <small>Validate và lưu bản gốc mã hóa trên S3.</small>
+          </div>
+          <div class="step">
+            <span class="index">02 / RULES</span>
+            <strong>Known + learned rules</strong>
+            <small>Merchant đã biết được duyệt với confidence 1.0.</small>
+          </div>
+          <div class="step">
+            <span class="index">03 / AI</span>
+            <strong>Bedrock few-shot</strong>
+            <small>Chỉ gọi model cho giao dịch chưa phân loại được.</small>
+          </div>
+          <div class="step">
+            <span class="index">04 / SAFETY</span>
+            <strong>Threshold</strong>
+            <small>Thấp hơn ngưỡng sẽ vào NEEDS_REVIEW.</small>
+          </div>
+          <div class="step">
+            <span class="index">05 / LEARN</span>
+            <strong>Human review</strong>
+            <small>Sửa category và tạo rule dùng cho lần sau.</small>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide" data-page="04 / 11">
+        <div class="eyebrow reveal">Kiến trúc đề xuất</div>
+        <h2 class="reveal delay-1">
+          Một đường triển khai ngắn, <span class="accent">đo được</span> và phòng thủ được.
+        </h2>
+        <div class="architecture reveal delay-2">
+          <div class="node">
+            <strong>Next.js UI</strong>
+            <span>AWS Amplify Hosting / HTTPS</span>
+          </div>
+          <div class="arrow">-&gt;</div>
+          <div class="node">
+            <strong>API Gateway REST</strong>
+            <span>Public API + throttling/auth surface</span>
+          </div>
+          <div class="arrow">-&gt;</div>
+          <div class="node">
+            <strong>Lambda / FastAPI</strong>
+            <span>Use cases + classification policy</span>
+          </div>
+        </div>
+        <div class="services reveal delay-3">
+          <div class="node">
+            <strong>S3</strong>
+            <span>CSV gốc mã hóa</span>
+          </div>
+          <div class="node">
+            <strong>PostgreSQL</strong>
+            <span>Transaction + review + rules</span>
+          </div>
+          <div class="node">
+            <strong>Bedrock</strong>
+            <span>JSON categorization</span>
+          </div>
+          <div class="node">
+            <strong>CloudWatch</strong>
+            <span>Logs + metrics + alarm</span>
+          </div>
+        </div>
+        <p class="footer-note reveal delay-3">
+          Lambda và RDS ở private subnets; S3 qua Gateway Endpoint; Bedrock qua
+          Interface Endpoint; không cần NAT Gateway trong topology W7.
+        </p>
+      </section>
+
+      <section class="slide" data-page="05 / 11">
+        <div class="eyebrow reveal">Vì sao không chọn RAG / Agent?</div>
+        <h2 class="reveal delay-1">
+          Dùng đúng công cụ cho <span class="gold">đúng loại dữ liệu</span>.
+        </h2>
+        <div class="grid-3 reveal delay-2">
+          <article class="card good">
+            <h3>Direct Bedrock</h3>
+            <p>
+              Transaction row đã có sẵn trong request. Model chỉ cần trả category
+              và confidence có cấu trúc.
+            </p>
+          </article>
+          <article class="card risk">
+            <h3>Knowledge Base / RAG</h3>
+            <p>
+              Hợp với hỏi đáp tài liệu. Với classification v1, retrieval thêm
+              ingestion, vector store và cold-start không cần thiết.
+            </p>
+          </article>
+          <article class="card risk">
+            <h3>Bedrock Agent</h3>
+            <p>
+              Return of Control dùng cho action orchestration. Review queue hiện
+              là business workflow đơn giản trong ứng dụng.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <section class="slide" data-page="06 / 11">
+        <div class="eyebrow reveal">Database decision</div>
+        <h2 class="reveal delay-1">
+          Spending insight là bài toán <span class="accent">SQL aggregation</span>.
+        </h2>
+        <div class="split reveal delay-2">
+          <div class="card good">
+            <h3>Chọn PostgreSQL</h3>
+            <table>
+              <tr><th>Use case</th><th>Cơ chế</th></tr>
+              <tr><td>Chi tiêu tháng/category</td><td><span class="mono">GROUP BY</span></td></tr>
+              <tr><td>Review queue</td><td><span class="mono">status filter</span></td></tr>
+              <tr><td>Audit import/model</td><td><span class="mono">JOIN</span></td></tr>
+              <tr><td>Update sau review</td><td><span class="mono">transaction</span></td></tr>
+            </table>
+          </div>
+          <div class="card risk">
+            <h3>Không chọn DynamoDB cho v1</h3>
+            <p class="note">
+              DynamoDB thắng khi truy cập theo key ở throughput cao. Với summary
+              theo thời gian và category, hệ thống cần thêm bảng tổng hợp,
+              GSI/pipeline hoặc scan không phù hợp cho demo hiện tại.
+            </p>
+            <p class="footer-note">
+              RDS Single-AZ cho hackathon; RDS Proxy giảm rủi ro connection burst từ Lambda.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide" data-page="07 / 11">
+        <div class="eyebrow reveal">Security & observability</div>
+        <h2 class="reveal delay-1">
+          Insight tài chính chỉ có giá trị khi <span class="gold">truy vết được</span>.
+        </h2>
+        <div class="grid-2 reveal delay-2">
+          <article class="card">
+            <h3 class="accent">Network + IAM</h3>
+            <ul class="checklist">
+              <li>RDS private, inbound chỉ từ Lambda security group.</li>
+              <li>S3 Block Public Access và encryption.</li>
+              <li>DB credential ở Secrets Manager.</li>
+              <li>Lambda role chỉ cấp quyền bucket/model/secret cần dùng.</li>
+            </ul>
+          </article>
+          <article class="card">
+            <h3 class="gold">Full Observability</h3>
+            <ul class="checklist">
+              <li><span class="mono">TransactionsClassified</span></li>
+              <li><span class="mono">RuleMatchRate</span></li>
+              <li><span class="mono">NeedsReviewRate</span></li>
+              <li><span class="mono">BedrockLatencyMs</span> + alarm lỗi API</li>
+            </ul>
+          </article>
+        </div>
+      </section>
+
+      <section class="slide" data-page="08 / 11">
+        <div class="eyebrow reveal">Chi phí 48 giờ</div>
+        <h2 class="reveal delay-1">
+          Kiến trúc đề xuất nằm rất xa <span class="accent">trần $100</span>.
+        </h2>
+        <div class="split reveal delay-2">
+          <table>
+            <tr><th>Nhóm chi phí</th><th>48 giờ</th></tr>
+            <tr><td>RDS + storage + Proxy</td><td>$2.290</td></tr>
+            <tr><td>Bedrock hybrid few-shot</td><td>$0.400</td></tr>
+            <tr><td>VPC Endpoint + KMS + Secrets</td><td>$0.717</td></tr>
+            <tr><td>Amplify + API + Lambda + S3</td><td>$0.192</td></tr>
+            <tr><td>Full Observability, paid-case</td><td>$0.337</td></tr>
+            <tr class="total"><td>Tổng conservative</td><td>$3.936</td></tr>
+          </table>
+          <aside class="callout">
+            <div>
+              <p class="note mono">TOTAL / 48 HOURS</p>
+              <div class="big-cost">$3.94</div>
+              <p class="note">3.94% của budget cap; còn khoảng $96.06 headroom.</p>
+            </div>
+            <p class="footer-note">
+              Assumption: 2.000 transactions, 60% match rules, 800 rows gọi Bedrock.
+              Không tính free tier để giữ estimate thận trọng.
+            </p>
+          </aside>
+        </div>
+      </section>
+
+      <section class="slide" data-page="09 / 11">
+        <div class="eyebrow reveal">Cost sensitivity</div>
+        <h2 class="reveal delay-1">
+          Học được rule nhiều hơn, <span class="accent">AI call ít hơn</span>.
+        </h2>
+        <div class="split reveal delay-2">
+          <div class="barset">
+            <div class="bar-wrap">
+              <div class="bar alt" style="--height: 250px">$4.54</div>
+              <p class="bar-label">0% rules</p>
+            </div>
+            <div class="bar-wrap">
+              <div class="bar alt" style="--height: 216px">$4.14</div>
+              <p class="bar-label">40% rules</p>
+            </div>
+            <div class="bar-wrap">
+              <div class="bar" style="--height: 197px">$3.94</div>
+              <p class="bar-label">60% rules</p>
+            </div>
+            <div class="bar-wrap">
+              <div class="bar" style="--height: 178px">$3.74</div>
+              <p class="bar-label">80% rules</p>
+            </div>
+          </div>
+          <div class="card">
+            <h3>Cách bảo vệ con số</h3>
+            <ul class="checklist">
+              <li>Chạy sample 30+ dòng có nhãn.</li>
+              <li>Đo rule match rate thật, không tuyên bố trước.</li>
+              <li>So sánh ít nhất hai Bedrock models.</li>
+              <li>Chọn threshold theo accuracy và review rate.</li>
+            </ul>
+            <p class="footer-note">
+              Planning case 60% rules: Bedrock xấp xỉ $0.20 / 1.000 giao dịch nhập.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide" data-page="10 / 11">
+        <div class="eyebrow reveal">Gap trước demo</div>
+        <h2 class="reveal delay-1">
+          Kiến trúc đúng chỉ có ý nghĩa khi <span class="gold">code khớp bằng chứng</span>.
+        </h2>
+        <table class="reveal delay-2">
+          <tr><th>Hiện trạng</th><th>Việc phải chốt</th></tr>
+          <tr>
+            <td>Backend mặc định gọi Ollama local</td>
+            <td>Deploy path phải gọi Bedrock thật từ ứng dụng.</td>
+          </tr>
+          <tr>
+            <td>API blueprint và API chạy thực tế khác nhau</td>
+            <td>Freeze contract <span class="mono">/api/v1/*</span> cho FE/BE.</td>
+          </tr>
+          <tr>
+            <td>Threshold ghi cả 0.60 và 0.80</td>
+            <td>Đo confusion matrix rồi thống nhất một giá trị.</td>
+          </tr>
+          <tr>
+            <td>Header <span class="mono">x-user-id</span> do client tự gửi</td>
+            <td>Chỉ dùng demo data hoặc thêm Cognito/JWT.</td>
+          </tr>
+          <tr>
+            <td>Case-study claim quá cụ thể</td>
+            <td>Chỉ giữ kết luận đã có nguồn chính thức xác nhận.</td>
+          </tr>
+        </table>
+      </section>
+
+      <section class="slide" data-page="11 / 11">
+        <div class="eyebrow reveal">Architecture defense</div>
+        <h2 class="reveal delay-1">
+          Chúng tôi chọn <span class="accent">kiến trúc nhỏ nhất</span> chứng minh được giá trị và kiểm soát rủi ro.
+        </h2>
+        <div class="grid-3 reveal delay-2">
+          <article class="card good">
+            <h3>Giá trị</h3>
+            <p>Upload sao kê, xem insight, sửa giao dịch mơ hồ và học rule mới.</p>
+          </article>
+          <article class="card good">
+            <h3>An toàn</h3>
+            <p>AI không tự quyết trường hợp confidence thấp; mọi thay đổi lưu vết được.</p>
+          </article>
+          <article class="card good">
+            <h3>Chi phí</h3>
+            <p>$3.94 trong 48 giờ, với đo lường và headroom lớn dưới trần $100.</p>
+          </article>
+        </div>
+        <p class="lede reveal delay-3">
+          Nguồn: W2-W7 project docs, BudgetBot reference, AWS Amplify / Bedrock /
+          Secrets Manager / CloudWatch pricing, AWS Robinhood + Amazon Nova case study.
+        </p>
+      </section>
+    </main>
+
+    <nav class="controls" aria-label="Dieu huong slide">
+      <button type="button" id="previous" aria-label="Slide truoc">Truoc</button>
+      <span class="counter" id="counter">01 / 11</span>
+      <button type="button" id="next" aria-label="Slide tiep">Tiep</button>
+    </nav>
+
+    <script>
+      (() => {
+        const deck = document.getElementById("deck")
+        const slides = Array.from(document.querySelectorAll(".slide"))
+        const progress = document.getElementById("progress")
+        const counter = document.getElementById("counter")
+        const previous = document.getElementById("previous")
+        const next = document.getElementById("next")
+        let index = 0
+        let touchStart = null
+
+        const show = (target) => {
+          index = Math.max(0, Math.min(slides.length - 1, target))
+          deck.style.transform = `translateX(-${index * 100}vw)`
+          slides.forEach((slide, position) => {
+            slide.classList.toggle("active", position === index)
+          })
+          const visible = String(index + 1).padStart(2, "0")
+          const total = String(slides.length).padStart(2, "0")
+          counter.textContent = `${visible} / ${total}`
+          progress.style.width = `${((index + 1) / slides.length) * 100}%`
+          previous.disabled = index === 0
+          next.disabled = index === slides.length - 1
+          window.location.hash = `slide-${index + 1}`
+        }
+
+        previous.addEventListener("click", () => show(index - 1))
+        next.addEventListener("click", () => show(index + 1))
+        document.addEventListener("keydown", (event) => {
+          if (["ArrowRight", "PageDown", " "].includes(event.key)) {
+            event.preventDefault()
+            show(index + 1)
+          }
+          if (["ArrowLeft", "PageUp"].includes(event.key)) {
+            event.preventDefault()
+            show(index - 1)
+          }
+          if (event.key === "Home") show(0)
+          if (event.key === "End") show(slides.length - 1)
+        })
+        document.addEventListener("touchstart", (event) => {
+          touchStart = event.changedTouches[0].clientX
+        })
+        document.addEventListener("touchend", (event) => {
+          if (touchStart === null) return
+          const distance = event.changedTouches[0].clientX - touchStart
+          if (Math.abs(distance) > 45) show(index + (distance < 0 ? 1 : -1))
+          touchStart = null
+        })
+
+        const requested = Number(window.location.hash.replace("#slide-", ""))
+        show(Number.isFinite(requested) && requested > 0 ? requested - 1 : 0)
+      })()
+    </script>
+  </body>
+</html>

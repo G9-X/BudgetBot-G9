@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>W7: Hackathon Đồ án - XBrain</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --orange: #fe7624;
+            --navy: #1e293b;
+            --cyan: #00b3d9;
+            --amber: #fbae42;
+            --bg-color: #f8fafc;
+            --text-color: #334155;
+            --card-bg: #ffffff;
+            --border-color: #e2e8f0;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            overflow: hidden; /* Hide scrollbars for full slide view */
+            line-height: 1.6;
+        }
+
+        code, pre {
+            font-family: 'JetBrains Mono', monospace;
+            background: #f1f5f9;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.9em;
+            color: var(--navy);
+        }
+
+        /* Slide Container */
+        #slide-container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            transition: transform 0.5s ease-in-out;
+        }
+
+        .slide {
+            min-width: 100vw;
+            height: 100vh;
+            padding: 4rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+            overflow-y: auto; /* Allow scrolling within slide if content is tall */
+        }
+
+        .slide.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Typography */
+        h1 {
+            color: var(--navy);
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            line-height: 1.2;
+        }
+        
+        h1 span {
+            color: var(--orange);
+        }
+
+        h2 {
+            color: var(--navy);
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 4px solid var(--cyan);
+            display: inline-block;
+            padding-bottom: 0.5rem;
+        }
+
+        h3 {
+            color: var(--cyan);
+            font-size: 1.5rem;
+            margin-top: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        p {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+        }
+
+        ul, ol {
+            margin-left: 2rem;
+            margin-bottom: 1.5rem;
+            font-size: 1.25rem;
+        }
+
+        li {
+            margin-bottom: 0.5rem;
+        }
+
+        /* Layouts */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .card {
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            border-top: 4px solid var(--amber);
+        }
+        
+        .card.orange-top { border-top-color: var(--orange); }
+        .card.cyan-top { border-top-color: var(--cyan); }
+        .card.navy-top { border-top-color: var(--navy); }
+
+        .highlight-box {
+            background-color: rgba(254, 118, 36, 0.1);
+            border-left: 6px solid var(--orange);
+            padding: 1.5rem;
+            border-radius: 0 8px 8px 0;
+            margin: 1.5rem 0;
+        }
+
+        .highlight-box.danger {
+            background-color: rgba(220, 38, 38, 0.1);
+            border-left-color: #dc2626;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            font-size: 1.1rem;
+            background: var(--card-bg);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        th, td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            background-color: var(--navy);
+            color: white;
+            font-weight: 600;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f8fafc;
+        }
+
+        /* Navigation Controls */
+        .controls {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            display: flex;
+            gap: 1rem;
+            z-index: 100;
+        }
+
+        .btn {
+            background: var(--navy);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+        }
+
+        .btn:hover { background: var(--cyan); }
+        .btn:active { transform: scale(0.95); }
+        .btn:disabled { background: #cbd5e1; cursor: not-allowed; }
+
+        .progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 6px;
+            background: var(--orange);
+            width: 0%;
+            transition: width 0.3s ease;
+            z-index: 100;
+        }
+
+        .logo {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            font-weight: 800;
+            font-size: 1.5rem;
+            color: var(--navy);
+            z-index: 100;
+        }
+        .logo span { color: var(--orange); }
+
+        /* Helpers */
+        .text-center { text-align: center; }
+        .mt-2 { margin-top: 2rem; }
+        .mb-2 { margin-bottom: 2rem; }
+        .tag {
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            background: var(--navy);
+            color: white;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin-right: 0.5rem;
+        }
+        .tag.mandatory { background: var(--orange); }
+        .tag.optional { background: var(--cyan); }
+    </style>
+</head>
+<body>
+
+    <div class="progress-bar" id="progress"></div>
+    <div class="logo">X<span>Brain</span></div>
+
+    <div id="slide-container">
+        
+        <!-- Slide 1: Title -->
+        <section class="slide">
+            <div class="text-center">
+                <h1>W7: Hackathon Đồ án Capstone<br><span>Xây dựng AI Cấp Sản Phẩm Trong 48 Giờ</span></h1>
+                <p style="font-size: 1.5rem; color: var(--navy); margin-top: 2rem;">
+                    <strong>28–31 tháng 5, 2026</strong> | Tài Khoản AWS Cá Nhân | GIỚI HẠN CỨNG $100
+                </p>
+                <div class="grid-3 mt-2" style="max-width: 800px; margin-left: auto; margin-right: auto;">
+                    <div class="card orange-top">
+                        <h3>48 Giờ</h3>
+                        <p>Xây dựng Thứ 4 - Thứ 5</p>
+                    </div>
+                    <div class="card cyan-top">
+                        <h3>Tài khoản thật</h3>
+                        <p>Trả phí thực tế</p>
+                    </div>
+                    <div class="card navy-top">
+                        <h3>Demo Trực Tiếp</h3>
+                        <p>Thuyết trình Thứ 6 - Thứ 7</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 2: The Challenge -->
+        <section class="slide">
+            <h2>Thử thách: Có gì khác biệt?</h2>
+            <div class="highlight-box">
+                <strong>Mục tiêu:</strong> Xây dựng nền tảng AI SaaS trực tiếp, công khai, sẵn sàng cho production trong 48 giờ.
+            </div>
+            <table>
+                <tr>
+                    <th>Tiêu chí</th>
+                    <th>W1-W6 Workshop</th>
+                    <th>W7 Capstone</th>
+                </tr>
+                <tr>
+                    <td><strong>Tài khoản AWS</strong></td>
+                    <td>Giảng viên cấp, reset hàng tuần</td>
+                    <td><strong>Tài khoản cá nhân — trả tiền thật</strong></td>
+                </tr>
+                <tr>
+                    <td><strong>Chi phí</strong></td>
+                    <td>$0 với học viên</td>
+                    <td><strong>Hóa đơn thực, tối đa $100</strong></td>
+                </tr>
+                <tr>
+                    <td><strong>Triển khai</strong></td>
+                    <td>Tùy chọn hoặc một phần</td>
+                    <td><strong>Bắt buộc — cần có public HTTPS URL</strong></td>
+                </tr>
+                <tr>
+                    <td><strong>Hỗ trợ</strong></td>
+                    <td>Giảng viên hướng dẫn & dạy</td>
+                    <td>Giảng viên gỡ rối blocker, không viết code</td>
+                </tr>
+            </table>
+            <p><strong>Hành trang:</strong> Kỹ năng từ W1-W6. Mọi tài nguyên trên tài khoản workshop đều bị xóa.</p>
+        </section>
+
+        <!-- Slide 3: Choose Your Domain -->
+        <section class="slide">
+            <h2>Chọn Lĩnh Vực (Domain)</h2>
+            <p>Kiến trúc công nghệ giống nhau ở mọi lĩnh vực. Sự khác biệt nằm ở kịch bản người dùng (user story) và loại dữ liệu.</p>
+            <div class="grid-3">
+                <div class="card orange-top">
+                    <h3>📚 EduTech: "AI Study Buddy"</h3>
+                    <p><strong>Khách hàng:</strong> Sinh viên/Học viên</p>
+                    <p><strong>Luồng:</strong> Tải PDF bài giảng → tóm tắt, tạo flashcard, Q&A.</p>
+                    <p><strong>Độ khó:</strong> Trích xuất dữ liệu có cấu trúc từ slide (bảng biểu/ảnh) & truy xuất chính xác.</p>
+                </div>
+                <div class="card cyan-top">
+                    <h3>💰 FinTech: "AI Money Coach"</h3>
+                    <p><strong>Khách hàng:</strong> Quản lý tài chính cá nhân</p>
+                    <p><strong>Luồng:</strong> Tải sao kê ngân hàng → phân loại giao dịch, phân tích chi tiêu.</p>
+                    <p><strong>Độ khó:</strong> Phân loại dữ liệu "bẩn" (mã giao dịch khó hiểu) & tính điểm độ tự tin (confidence).</p>
+                </div>
+                <div class="card navy-top">
+                    <h3>🏢 ProductivityTech: "AI Doc Hub"</h3>
+                    <p><strong>Khách hàng:</strong> Pháp chế/Tuân thủ</p>
+                    <p><strong>Luồng:</strong> Tải hợp đồng → tìm kiếm toàn cục, cách ly dữ liệu đa người dùng (multi-tenant).</p>
+                    <p><strong>Độ khó:</strong> Lẫn lộn tài liệu giữa các tenant & xử lý phiên bản cũ.</p>
+                </div>
+            </div>
+        </section>
+
+        
+        <!-- Slide 3.5: Reference Architectures -->
+        <section class="slide">
+            <h2>Sơ đồ Kiến trúc AWS (Tham khảo)</h2>
+            
+            <p>Dưới đây là các ảnh kiến trúc thực tế lấy từ mạng (nguồn chính thức AWS Builder & giải pháp thực tế).</p>
+            <div class="grid-2" style="margin-top: 1rem; align-items: start;">
+                <div class="card orange-top">
+                    <h3 style="font-size: 1.2rem; text-align: center; margin-top: 0;">1. Kiến trúc Thực tế (Real-World AWS RAG)</h3>
+                    <p style="font-size: 0.9rem; text-align: center; color: #64748b; margin-bottom: 1rem;">Nguồn: AWS Machine Learning Blog</p>
+                    <img src="https://d2908q01vomqb2.cloudfront.net/f1f836cb4ea6efb2a0b1b99f41ad8b103eff4b59/2024/05/13/ml-15933-rag-arch-new.jpg" alt="AWS RAG Architecture" style="width: 100%; border-radius: 8px; border: 1px solid #e2e8f0;">
+                </div>
+                <div class="card cyan-top">
+                    <h3 style="font-size: 1.2rem; text-align: center; margin-top: 0;">2. Mô hình từ các cuộc thi (AWS Hackathon/Builder)</h3>
+                    <p style="font-size: 0.9rem; text-align: center; color: #64748b; margin-bottom: 1rem;">Nguồn: Dự án thắng giải ứng dụng Bedrock Agents</p>
+                    <img src="https://d2908q01vomqb2.cloudfront.net/f1f836cb4ea6efb2a0b1b99f41ad8b103eff4b59/2024/05/15/ml-15933-archdiag-new2.png" alt="AWS Hackathon Architecture" style="width: 100%; border-radius: 8px; border: 1px solid #e2e8f0;">
+                </div>
+            </div>
+
+        </section>
+        
+        <!-- Slide 3.6: 2025-2026 Trends -->
+        <section class="slide">
+            <h2>Xu hướng 2025-2026 & Đội thắng giải AWS</h2>
+            <p>Bài học từ các hệ thống Doanh nghiệp và cuộc thi AWS Hackathon toàn cầu.</p>
+            <div class="grid-3" style="margin-top: 1rem; align-items: start;">
+                <div class="card orange-top">
+                    <h3 style="font-size: 1.2rem; margin-top: 0;">📚 EduTech: Agentic RAG</h3>
+                    <p style="font-size: 1rem;"><strong>Dự án:</strong> <em>Ivy</em> (Giải AWS 10,000 AIdeas 2026)</p>
+                    <p style="font-size: 1rem;"><strong>Thực tế giải quyết:</strong> Không dùng RAG truyền thống. Hệ thống tự động dùng <strong>Self-Corrective RAG</strong> (Tự sửa lỗi) và xây dựng lộ trình học từ lịch sử sai sót, hoạt động tốt cả khi mạng yếu.</p>
+                </div>
+                <div class="card cyan-top">
+                    <h3 style="font-size: 1.2rem; margin-top: 0;">💰 FinTech: Hybrid Multi-Agent</h3>
+                    <p style="font-size: 1rem;"><strong>Dự án:</strong> <em>Sentinel</em> (Giải GenAI Case 2025)</p>
+                    <p style="font-size: 1rem;"><strong>Thực tế giải quyết:</strong> Tránh gọi LLM 100% vì chi phí. Doanh nghiệp dùng <strong>Hybrid Workflow</strong>: Regex xử lý dữ liệu dễ, <strong>Supervisor Agent</strong> lo ca khó. Kèm Human-in-the-loop nếu AI tự tin thấp.</p>
+                </div>
+                <div class="card navy-top">
+                    <h3 style="font-size: 1.2rem; margin-top: 0;">🏢 Doc Hub: GraphRAG & MCP</h3>
+                    <p style="font-size: 1rem;"><strong>Dự án:</strong> <em>Privacy Guardian</em> (Giải GenAI Impetus 2025)</p>
+                    <p style="font-size: 1rem;"><strong>Thực tế giải quyết:</strong> Chống rò rỉ dữ liệu chéo bằng <strong>Model Context Protocol (MCP)</strong> và <strong>GraphRAG</strong>. Mạng lưới Đa đặc vụ tự quét an toàn trước khi cho phép truy vấn tài liệu.</p>
+                </div>
+            </div>
+            <div class="highlight-box mt-2" style="font-size: 1.1rem;">
+                <strong>💡 Tip ăn điểm Demo:</strong> Thay vì nói "Chúng em dùng Bedrock", hãy nói <em>"Chúng em kết hợp Rule-based và Bedrock Agent để tối ưu chi phí (Cost Discipline) và đưa các ca khó vào hàng chờ duyệt"</em>.
+            </div>
+        </section>
+        
+        
+        <!-- Slide 3.7: VIP Architecture -->
+        <section class="slide">
+            <h2>Kiến trúc VIP: Multi-Tenant Doc Hub</h2>
+            <p>Sơ đồ kiến trúc B2B Enterprise giúp nhóm đạt điểm tuyệt đối ở hạng mục <strong>Cost Discipline</strong> và <strong>Architecture</strong>.</p>
+            
+            <div style="display: flex; gap: 2rem; margin-top: 1rem; align-items: stretch;">
+                <div class="card" style="flex: 2;">
+                    <h3 style="margin-top: 0;">Sơ đồ Luồng Dữ liệu (Pool Pattern)</h3>
+                    
+                    <div style="text-align: center; margin-top: 1rem;">
+                        <img src="https://d2908q01vomqb2.cloudfront.net/f1f836cb4ea6efb2a0b1b99f41ad8b103eff4b59/2024/02/11/ml-15933-001-1260x571.jpg" alt="AWS Multi-Tenant Doc Hub Architecture" style="width: 100%; border-radius: 8px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);">
+                        <p style="font-size: 0.85rem; color: #64748b; margin-top: 0.5rem;"><em>Nguồn: AWS Machine Learning Blog (Advanced Knowledge Bases Architecture)</em></p>
+                    </div>
+
+                </div>
+
+                <div style="flex: 1; display: flex; flex-direction: column; gap: 1rem;">
+                    <div class="card orange-top">
+                        <h4 style="margin-top: 0;">1. Tối ưu Chi phí (Cost)</h4>
+                        <p style="font-size: 0.95rem;">Không tạo riêng từng DB. Dùng chung 1 <strong>OpenSearch Pool</strong>. Phân tách bằng siêu dữ liệu (Metadata).</p>
+                    </div>
+                    <div class="card cyan-top">
+                        <h4 style="margin-top: 0;">2. An toàn Dữ liệu (Security)</h4>
+                        <p style="font-size: 0.95rem;">Ép buộc <strong>tenant_id</strong> từ Lambda Authorizer (Backend). Hacker không thể giả mạo ID qua API.</p>
+                    </div>
+                    <div class="card navy-top">
+                        <h4 style="margin-top: 0;">3. Giải quyết Ảo giác (Logic)</h4>
+                        <p style="font-size: 0.95rem;">Kiểm tra <strong>DynamoDB</strong> để loại bỏ tài liệu cũ (Stale Docs) trước khi RAG, đảm bảo AI luôn đọc bản mới nhất.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Slide 4: 7 Mandatory Capabilities -->
+
+
+
+        <section class="slide">
+            <h2>7 Năng Lực Bắt Buộc</h2>
+            <p>Mỗi nhóm PHẢI demo tất cả các mục này vào thứ Sáu. Các lựa chọn dịch vụ phải được biện luận rõ ràng.</p>
+            <div class="grid-2" style="font-size: 1.1rem;">
+                <div>
+                    <p><span class="tag mandatory">1</span> <strong>Giao diện người dùng:</strong> Public HTTPS (VD: CloudFront, ALB, API GW)</p>
+                    <p><span class="tag mandatory">2</span> <strong>Tính toán (Compute):</strong> Nơi code chạy (VD: Lambda, EC2, ECS)</p>
+                    <p><span class="tag mandatory">3</span> <strong>Tính năng AI / ML:</strong> Bedrock KB+Agent, hoặc InvokeModel</p>
+                    <p><span class="tag mandatory">4</span> <strong>Lưu trữ dữ liệu có cấu trúc:</strong> Trạng thái phiên (VD: DynamoDB, RDS)</p>
+                </div>
+                <div>
+                    <p><span class="tag mandatory">5</span> <strong>Lưu trữ Object:</strong> Tệp tin/Tài liệu (S3)</p>
+                    <p><span class="tag mandatory">6</span> <strong>Nền tảng Mạng:</strong> Database không public (VPC, private subnets, SGs)</p>
+                    <p><span class="tag mandatory">7</span> <strong>Danh tính & Truy cập:</strong> IAM least-privilege cho compute. (Auth frontend tự chọn: IAM/Cognito/Custom)</p>
+                </div>
+            </div>
+            <div class="highlight-box mt-2">
+                "Tại sao bạn chọn dịch vụ này cho năng lực này?"<br>
+                <em>Một câu trả lời tốt phải liên kết với các yếu tố đánh đổi (chi phí, tốc độ, quy mô). Trả lời "Vì em biết dùng nó" là điểm kém.</em>
+            </div>
+        </section>
+
+        <!-- Slide 5: 3 Optional Capabilities -->
+        <section class="slide">
+            <h2>3 Năng Lực Tùy Chọn (Chọn MỘT)</h2>
+            <p>Làm MỘT thứ thật tốt. Đừng làm cả 3 nửa vời. Mục này giúp tăng điểm đánh giá Kiến trúc.</p>
+            <div class="grid-3">
+                <div class="card">
+                    <h3><span class="tag optional">8</span> Quan sát toàn diện (Observability)</h3>
+                    <ul>
+                        <li>CloudWatch Dashboard</li>
+                        <li>Ít nhất 1 custom metric</li>
+                        <li>1 Alarm ở trạng thái OK/ALARM</li>
+                        <li>1 Log Insights query đã lưu</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h3><span class="tag optional">9</span> Phân tích chi phí chuyên sâu</h3>
+                    <ul>
+                        <li>3 ảnh chụp Cost Explorer hằng ngày</li>
+                        <li>Phân tích chi phí trên mỗi tính năng</li>
+                        <li>Demo cảnh báo Cost Anomaly Detection</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h3><span class="tag optional">10</span> Bảo mật nâng cao</h3>
+                    <ul>
+                        <li>Chọn MỘT mảng đi sâu:</li>
+                        <li>Mã hóa (KMS CMK rotation)</li>
+                        <li>Giám sát (Config/Security Hub)</li>
+                        <li>Bảo mật khóa (Secrets Manager)</li>
+                        <li>Mạng (WAF/Strict SGs)</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 6: Pre-flight Safety -->
+        <section class="slide">
+            <h2>An Toàn Trước Khi Bay (Bắt buộc xong Thứ 4)</h2>
+            <p>Giảng viên phải xác nhận các mục này trước khi bạn triển khai hạ tầng tính phí.</p>
+            <div class="highlight-box danger">
+                <strong>Chưa hoàn thành = Không được duyệt thiết kế kiến trúc</strong>
+            </div>
+            <ul style="font-size: 1.3rem;">
+                <li>🔒 <strong>Bật MFA</strong> trên tài khoản AWS root.</li>
+                <li>💸 <strong>AWS Budget Alert</strong> được tạo ở mức $80 (80%). BẮT BUỘC phải xác nhận email từ SNS.</li>
+                <li>📈 <strong>Cost Anomaly Detection</strong> được bật ở cấp độ tài khoản.</li>
+                <li>🏷️ <strong>Chiến lược gắn Tag</strong>: <code>Project=W7Capstone, Team=G&lt;N&gt;, Owner=&lt;name&gt;, Environment=hackathon</code></li>
+                <li>🤖 <strong>Quyền truy cập Bedrock Model</strong> đã yêu cầu & phê duyệt (VD: Claude Haiku, Titan Embeddings v2).</li>
+            </ul>
+        </section>
+
+        <!-- Slide 7: Quality Bar -->
+        <section class="slide">
+            <h2>Tiêu chuẩn Chất lượng: Hoàn Thiện > Đánh Bóng</h2>
+            <div class="grid-2">
+                <div class="card cyan-top">
+                    <h3 style="color: var(--navy)">✅ Chấm điểm (Tập trung vào đây)</h3>
+                    <ul>
+                        <li>Biện luận quyết định kiến trúc</li>
+                        <li>7 năng lực bắt buộc hoạt động ổn định</li>
+                        <li>Live URL hoạt động cho happy path</li>
+                        <li>Tính năng AI tạo ra kết quả thực</li>
+                        <li>Trạng thái lưu trữ (Ghi T5, đọc T6)</li>
+                        <li>Tài liệu Evidence Pack</li>
+                        <li>Kỷ luật chi phí (Dưới cap $100)</li>
+                    </ul>
+                </div>
+                <div class="card orange-top">
+                    <h3 style="color: var(--navy)">❌ Không chấm điểm (Bỏ qua)</h3>
+                    <ul>
+                        <li>Cấu trúc/Chất lượng Code (code xấu không sao)</li>
+                        <li>Giao diện/Thiết kế frontend (HTML cơ bản là đủ)</li>
+                        <li>Xử lý lỗi toàn diện (cứ để throw & log)</li>
+                        <li>Unit/Integration tests</li>
+                        <li>Xử lý Edge case</li>
+                        <li>Luồng Cognito chuẩn production</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 8: Cost Discipline -->
+        <section class="slide">
+            <h2>Kỷ luật Chi phí: Giới hạn cứng $100</h2>
+            <p>Tài khoản thật, tiền thật. Vượt quá $100 thì điểm Deploy của bạn bị giới hạn tối đa ở mức 3.</p>
+            
+            <div class="highlight-box">
+                <strong>Mẹo sống sót chi phí:</strong>
+                <ul>
+                    <li>Dùng model rẻ nhất đáp ứng đủ nhu cầu (VD: Claude 3 Haiku) lúc dev.</li>
+                    <li>Tránh Multi-AZ RDS. Dùng single-AZ db.t3.micro.</li>
+                    <li>Bỏ qua NAT Gateway ($1.50/ngày) nếu có thể; dùng VPC Endpoints.</li>
+                    <li>Xóa các resource không dùng hằng ngày (VD: EC2 chạy không).</li>
+                </ul>
+            </div>
+            
+            <h3>Bắt Buộc Dọn Dẹp (Teardown)</h3>
+            <p>Trước <strong>Hết ngày Chủ nhật</strong>, mọi resource phải bị xóa. Commit ảnh <code>teardown_confirmation.png</code> (Cost Explorer về 0) lên repo vào Thứ 2.</p>
+        </section>
+
+        <!-- Slide 9: Schedule & Evaluation -->
+        <section class="slide">
+            <h2>Lịch Trình & Đánh Giá</h2>
+            
+            <table style="font-size: 1rem;">
+                <tr>
+                    <th style="width: 25%">Ngày</th>
+                    <th>Trọng tâm</th>
+                </tr>
+                <tr>
+                    <td><strong>Thứ 4 (Ngày 1)</strong></td>
+                    <td>Chốt Kiến trúc. Triển khai nền tảng (VPC, IAM). Triển khai Core (API, Compute, DB). Test plumbing happy path.</td>
+                </tr>
+                <tr>
+                    <td><strong>Thứ 5 (Ngày 2)</strong></td>
+                    <td>Tích hợp AI (Bedrock). Triển khai 1 Tùy chọn (Optional). Viết Evidence Pack. Quay video demo 3 phút (phòng hờ rủi ro!).</td>
+                </tr>
+                <tr>
+                    <td><strong>Thứ 6-7 (Demo)</strong></td>
+                    <td>Thuyết trình 40 phút. Live URL phải sẵn sàng.</td>
+                </tr>
+            </table>
+
+            <h3 class="mt-2">Chi tiết tính điểm (Phiên 40 phút)</h3>
+            <ul style="font-size: 1.1rem; display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <li><strong>10%</strong> - Pitch + Tầm nhìn (5 phút)</li>
+                <li><strong>20%</strong> - Walkthrough Kiến trúc (14 phút)</li>
+                <li><strong>30%</strong> - QnA Cá nhân (12 phút - Ai cũng có thể bị gọi!)</li>
+                <li><strong>40%</strong> - Deployment + Evidence Pack (7 phút demo)</li>
+            </ul>
+        </section>
+
+    </div>
+
+    <!-- Navigation Controls -->
+    <div class="controls">
+        <button class="btn" id="prevBtn" onclick="changeSlide(-1)">Quay lại</button>
+        <button class="btn" id="nextBtn" onclick="changeSlide(1)">Tiếp theo</button>
+    </div>
+
+    <script>
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        const slideContainer = document.getElementById('slide-container');
+        const progressBar = document.getElementById('progress');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+
+        function updateSlider() {
+            // Update container transform
+            slideContainer.style.transform = `translateX(-${currentSlide * 100}vw)`;
+            
+            // Update active classes for animations
+            slides.forEach((slide, index) => {
+                if (index === currentSlide) {
+                    slide.classList.add('active');
+                } else {
+                    slide.classList.remove('active');
+                }
+            });
+
+            // Update progress bar
+            const progress = ((currentSlide + 1) / slides.length) * 100;
+            progressBar.style.width = `${progress}%`;
+
+            // Update buttons
+            prevBtn.disabled = currentSlide === 0;
+            nextBtn.disabled = currentSlide === slides.length - 1;
+        }
+
+        function changeSlide(direction) {
+            currentSlide += direction;
+            if (currentSlide < 0) currentSlide = 0;
+            if (currentSlide >= slides.length) currentSlide = slides.length - 1;
+            updateSlider();
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === 'Space') {
+                changeSlide(1);
+            } else if (e.key === 'ArrowLeft') {
+                changeSlide(-1);
+            }
+        });
+
+        // Touch navigation
+        let touchStartX = 0;
+        document.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+        });
+        
+        document.addEventListener('touchend', e => {
+            let touchEndX = e.changedTouches[0].screenX;
+            if (touchStartX - touchEndX > 50) {
+                changeSlide(1); // Swipe left
+            } else if (touchEndX - touchStartX > 50) {
+                changeSlide(-1); // Swipe right
+            }
+        });
+
+        // Init
+        updateSlider();
+    </script>
+
+    <!-- Mermaid JS -->
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true, theme: 'base', themeVariables: { primaryColor: '#f1f5f9', primaryTextColor: '#1e293b', primaryBorderColor: '#00b3d9', lineColor: '#fe7624' } });
+    </script>
+</body>
+
+</html>

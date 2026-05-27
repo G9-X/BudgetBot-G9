@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Guardian - Quán quân GenAI Hackathon 2025</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&family=JetBrains+Mono&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --xb-orange: #fe7624;
+            --xb-navy: #1e293b;
+            --xb-cyan: #00b3d9;
+            --xb-amber: #fbae42;
+            --bg-light: #f8fafc;
+            --text-main: #334155;
+            --white: #ffffff;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg-light);
+            color: var(--text-main);
+            overflow: hidden;
+            height: 100%;
+        }
+
+        .slide-container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .slide {
+            width: 100vw;
+            height: 100vh;
+            padding: 4rem;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            position: absolute;
+            top: 0;
+            left: 0;
+            background-color: var(--bg-light);
+            z-index: 1;
+        }
+
+        .slide.active {
+            opacity: 1;
+            transform: translateY(0);
+            z-index: 10;
+        }
+
+        h1, h2, h3 { color: var(--xb-navy); margin-bottom: 1.5rem; }
+        h1 { font-size: 3.5rem; text-align: center; font-weight: 800; }
+        h1 span { color: var(--xb-orange); }
+        h2 { font-size: 2.5rem; border-bottom: 3px solid var(--xb-cyan); padding-bottom: 0.5rem; }
+
+        .card {
+            background: var(--white);
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 10px 25px rgba(30, 41, 59, 0.05);
+            border-top: 5px solid var(--xb-navy);
+            width: 100%;
+            max-width: 900px;
+            margin: 1rem 0;
+        }
+        .card.orange { border-top-color: var(--xb-orange); }
+        .card.cyan { border-top-color: var(--xb-cyan); }
+        .card.amber { border-top-color: var(--xb-amber); }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            width: 100%;
+            max-width: 1100px;
+        }
+
+        img.arch-diagram {
+            max-width: 100%;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        code {
+            font-family: 'JetBrains Mono', monospace;
+            background: #e2e8f0;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.9em;
+            color: var(--xb-orange);
+        }
+
+        .nav-dots {
+            position: fixed;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 100;
+        }
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #cbd5e1;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .dot.active { background: var(--xb-orange); transform: scale(1.3); }
+    </style>
+</head>
+<body>
+
+    <div class="nav-dots" id="dotsContainer"></div>
+
+    <div class="slide-container" id="slider">
+        <!-- Slide 1 -->
+        <section class="slide active">
+            <h1>GenAI Hackathon 2025 <br><span>Quán quân: Privacy Guardian</span></h1>
+            <p style="font-size: 1.5rem; text-align: center; max-width: 800px; line-height: 1.6;">
+                <strong>Domain C: Doc Hub (Hệ thống Quản lý Tài liệu)</strong><br>
+                Đạt Giải Nhất ($10,000) - Nabanita De <br>
+                Tổ chức bởi Impetus Technologies & AWS
+            </p>
+        </section>
+
+        <!-- Slide 2 -->
+        <section class="slide">
+            <h2>Bài Toán: Rò rỉ dữ liệu giữa các Khách hàng (Multi-Tenant)</h2>
+            <div class="card orange">
+                <h3>Vấn đề</h3>
+                <p>Khi nhiều khách hàng cùng tải tài liệu lên một hệ thống RAG dùng chung, rủi ro lớn nhất là AI (LLM) bị ảo giác hoặc truy xuất nhầm mã nguồn/tài liệu mật của khách hàng này rồi trả lời cho khách hàng khác.</p>
+            </div>
+            <div class="card cyan">
+                <h3>Yêu cầu cốt lõi</h3>
+                <p>Xây dựng một hệ thống quản trị chặt chẽ (Governance System) để cô lập dữ liệu hoàn toàn ở tầng truy xuất (Retrieval) nhưng vẫn đảm bảo tối ưu chi phí và hiệu suất cao.</p>
+            </div>
+        </section>
+
+        <!-- Slide 3 -->
+        <section class="slide">
+            <h2>Giải Pháp: GraphRAG & Multi-Agent MCP</h2>
+            <div class="grid-2">
+                <div>
+                    <div class="card navy">
+                        <h3>Công nghệ chính</h3>
+                        <ul style="line-height: 1.8; font-size: 1.1rem;">
+                            <li><strong>GraphRAG:</strong> Vẽ sơ đồ quan hệ giữa các tệp mã nguồn để AI hiểu ngữ cảnh sâu thay vì chỉ tìm kiếm vector bề mặt.</li>
+                            <li><strong>Model Context Protocol (MCP):</strong> Quét và kiểm tra cấp phép tài liệu an toàn trước khi đẩy vào đường ống RAG.</li>
+                            <li><strong>Hệ thống Đa tác vụ (Multi-Agent):</strong> Sử dụng các Agent chuyên biệt (Người quét, Người tìm kiếm, Người giám sát) để kiểm tra chéo từng bước.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div style="text-align: center;">
+                    <img class="arch-diagram" src="https://d2908q01vomqb2.cloudfront.net/f1f836cb4ea6efb2a0b1b99f41ad8b103eff4b59/2024/02/11/ml-15933-001-1260x571.jpg" alt="Kiến trúc AWS Multi-Tenant Bedrock">
+                    <p style="font-size: 0.9rem; color: #64748b;"><em>Kiến trúc mẫu AWS: Multi-tenant Knowledge Base (Mô hình Pool)</em></p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 4 -->
+        <section class="slide">
+            <h2>Áp dụng kiến trúc lên AWS (Dành cho Đồ án W7)</h2>
+            <div class="card amber">
+                <h3>Hướng dẫn triển khai</h3>
+                <p>Để tái tạo lại thiết kế chuẩn của nhà vô địch cho bài tập StudyBot/DocHub, bạn cần sử dụng:</p>
+                <ul style="line-height: 1.8; font-size: 1.1rem;">
+                    <li><code>Amazon Bedrock Knowledge Bases</code> - Cài đặt theo mô hình chia sẻ tài nguyên (Pool Pattern).</li>
+                    <li><code>Amazon OpenSearch Serverless</code> - Lưu trữ Vector có áp dụng Bộ lọc Siêu dữ liệu (Metadata Filtering) khắt khe (VD: lọc theo <code>tenant_id</code>).</li>
+                    <li><code>Amazon Bedrock Agents</code> - Tạo Agent điều phối (Orchestrator) để rẽ nhánh truy vấn dựa trên quyền của từng user.</li>
+                    <li><code>AWS Lambda</code> - Đóng vai trò Action Groups để thực thi logic kiểm tra bảo mật (MCP) trước khi trả kết quả.</li>
+                </ul>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        const slides = document.querySelectorAll('.slide');
+        const dotsContainer = document.getElementById('dotsContainer');
+        let currentSlide = 0;
+
+        slides.forEach((_, i) => {
+            const dot = document.createElement('div');
+            dot.className = `dot ${i === 0 ? 'active' : ''}`;
+            dot.addEventListener('click', () => goToSlide(i));
+            dotsContainer.appendChild(dot);
+        });
+        const dots = document.querySelectorAll('.dot');
+
+        function goToSlide(index) {
+            slides[currentSlide].classList.remove('active');
+            dots[currentSlide].classList.remove('active');
+            currentSlide = index;
+            if (currentSlide < 0) currentSlide = slides.length - 1;
+            if (currentSlide >= slides.length) currentSlide = 0;
+            slides[currentSlide].classList.add('active');
+            dots[currentSlide].classList.add('active');
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === 'PageDown') goToSlide(currentSlide + 1);
+            else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp' || e.key === 'PageUp') goToSlide(currentSlide - 1);
+        });
+
+        let touchStartY = 0;
+        document.addEventListener('touchstart', e => touchStartY = e.changedTouches[0].screenY);
+        document.addEventListener('touchend', e => {
+            const touchEndY = e.changedTouches[0].screenY;
+            if (touchStartY - touchEndY > 50) goToSlide(currentSlide + 1);
+            if (touchEndY - touchStartY > 50) goToSlide(currentSlide - 1);
+        });
+
+        let isThrottled = false;
+        document.addEventListener('wheel', (e) => {
+            if (isThrottled) return;
+            isThrottled = true;
+            setTimeout(() => isThrottled = false, 800);
+            if (e.deltaY > 0) goToSlide(currentSlide + 1);
+            else if (e.deltaY < 0) goToSlide(currentSlide - 1);
+        });
+    </script>
+</body>
+</html>

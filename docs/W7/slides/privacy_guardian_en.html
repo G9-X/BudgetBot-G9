@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Guardian - GenAI Hackathon Winner 2025</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&family=JetBrains+Mono&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --xb-orange: #fe7624;
+            --xb-navy: #1e293b;
+            --xb-cyan: #00b3d9;
+            --xb-amber: #fbae42;
+            --bg-light: #f8fafc;
+            --text-main: #334155;
+            --white: #ffffff;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg-light);
+            color: var(--text-main);
+            overflow: hidden; /* Manage scrolling inside sections */
+            height: 100%;
+        }
+
+        .slide-container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+            overflow-y: hidden;
+            scroll-behavior: smooth;
+        }
+
+        .slide {
+            width: 100vw;
+            height: 100vh;
+            padding: 4rem;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            position: absolute;
+            top: 0;
+            left: 0;
+            background-color: var(--bg-light);
+            z-index: 1;
+        }
+
+        .slide.active {
+            opacity: 1;
+            transform: translateY(0);
+            z-index: 10;
+        }
+
+        h1, h2, h3 {
+            color: var(--xb-navy);
+            margin-bottom: 1.5rem;
+        }
+        
+        h1 { font-size: 3.5rem; text-align: center; font-weight: 800; }
+        h1 span { color: var(--xb-orange); }
+        h2 { font-size: 2.5rem; border-bottom: 3px solid var(--xb-cyan); padding-bottom: 0.5rem; }
+
+        .card {
+            background: var(--white);
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 10px 25px rgba(30, 41, 59, 0.05);
+            border-top: 5px solid var(--xb-navy);
+            width: 100%;
+            max-width: 900px;
+            margin: 1rem 0;
+        }
+        .card.orange { border-top-color: var(--xb-orange); }
+        .card.cyan { border-top-color: var(--xb-cyan); }
+        .card.amber { border-top-color: var(--xb-amber); }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            width: 100%;
+            max-width: 1100px;
+        }
+
+        img.arch-diagram {
+            max-width: 100%;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        code {
+            font-family: 'JetBrains Mono', monospace;
+            background: #e2e8f0;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.9em;
+            color: var(--xb-orange);
+        }
+
+        /* Navigation dots */
+        .nav-dots {
+            position: fixed;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 100;
+        }
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #cbd5e1;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .dot.active { background: var(--xb-orange); transform: scale(1.3); }
+
+    </style>
+</head>
+<body>
+
+    <div class="nav-dots" id="dotsContainer"></div>
+
+    <div class="slide-container" id="slider">
+        <!-- Slide 1 -->
+        <section class="slide active">
+            <h1>GenAI Hackathon 2025 <br><span>Winning Project: Privacy Guardian</span></h1>
+            <p style="font-size: 1.5rem; text-align: center; max-width: 800px; line-height: 1.6;">
+                <strong>Domain C: Doc Hub</strong><br>
+                First Prize Winner ($10,000) - Nabanita De <br>
+                Hosted by Impetus Technologies & AWS
+            </p>
+        </section>
+
+        <!-- Slide 2 -->
+        <section class="slide">
+            <h2>The Challenge: Multi-Tenant Data Leaks</h2>
+            <div class="card orange">
+                <h3>The Problem</h3>
+                <p>When multiple tenants (companies or users) upload codebases and documents to a centralized RAG system, there is a high risk of "cross-tenant data leakage" where an LLM hallucinates or accidentally retrieves proprietary code belonging to another tenant.</p>
+            </div>
+            <div class="card cyan">
+                <h3>The Requirement</h3>
+                <p>Build a robust governance system that strictly enforces data isolation at the retrieval layer while maintaining high performance and cost-efficiency.</p>
+            </div>
+        </section>
+
+        <!-- Slide 3 -->
+        <section class="slide">
+            <h2>The Solution: GraphRAG & Multi-Agent MCP</h2>
+            <div class="grid-2">
+                <div>
+                    <div class="card navy">
+                        <h3>Key Technologies</h3>
+                        <ul style="line-height: 1.8; font-size: 1.1rem;">
+                            <li><strong>GraphRAG:</strong> Maps relationships between code files to understand context beyond simple vector similarity.</li>
+                            <li><strong>Model Context Protocol (MCP):</strong> Safely scans documents and enforces licensing rules before exposing them to the RAG pipeline.</li>
+                            <li><strong>Multi-Agent System:</strong> Employs specialized agents (Scanner Agent, Retrieval Agent, Supervisor Agent) to validate every step.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div style="text-align: center;">
+                    <!-- Real AWS Multi-tenant RAG Architecture -->
+                    <img class="arch-diagram" src="https://d2908q01vomqb2.cloudfront.net/f1f836cb4ea6efb2a0b1b99f41ad8b103eff4b59/2024/02/11/ml-15933-001-1260x571.jpg" alt="AWS Multi-Tenant Bedrock Architecture">
+                    <p style="font-size: 0.9rem; color: #64748b;"><em>Reference AWS Pattern: Multi-tenant Knowledge Base (Pool Pattern)</em></p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 4 -->
+        <section class="slide">
+            <h2>AWS Services Architecture</h2>
+            <div class="card amber">
+                <h3>How it translates to AWS</h3>
+                <p>To replicate this winning pattern for the W7 Capstone (StudyBot/DocHub), you should utilize:</p>
+                <ul style="line-height: 1.8; font-size: 1.1rem;">
+                    <li><code>Amazon Bedrock Knowledge Bases</code> - Set up a Pooled Pattern index.</li>
+                    <li><code>Amazon OpenSearch Serverless</code> - Vector storage with strict Metadata Filtering (e.g., filtering by <code>tenant_id</code>).</li>
+                    <li><code>Amazon Bedrock Agents</code> - Create an orchestration agent to route queries based on tenant permissions.</li>
+                    <li><code>AWS Lambda</code> - Act as Action Groups for MCP implementation and licensing validation.</li>
+                </ul>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        const slides = document.querySelectorAll('.slide');
+        const dotsContainer = document.getElementById('dotsContainer');
+        let currentSlide = 0;
+
+        // Initialize Dots
+        slides.forEach((_, i) => {
+            const dot = document.createElement('div');
+            dot.className = `dot ${i === 0 ? 'active' : ''}`;
+            dot.addEventListener('click', () => goToSlide(i));
+            dotsContainer.appendChild(dot);
+        });
+        const dots = document.querySelectorAll('.dot');
+
+        function goToSlide(index) {
+            slides[currentSlide].classList.remove('active');
+            dots[currentSlide].classList.remove('active');
+            
+            currentSlide = index;
+            if (currentSlide < 0) currentSlide = slides.length - 1;
+            if (currentSlide >= slides.length) currentSlide = 0;
+            
+            slides[currentSlide].classList.add('active');
+            dots[currentSlide].classList.add('active');
+        }
+
+        // Keyboard Navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === 'PageDown') {
+                goToSlide(currentSlide + 1);
+            } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp' || e.key === 'PageUp') {
+                goToSlide(currentSlide - 1);
+            }
+        });
+
+        // Swipe Navigation
+        let touchStartY = 0;
+        document.addEventListener('touchstart', e => touchStartY = e.changedTouches[0].screenY);
+        document.addEventListener('touchend', e => {
+            const touchEndY = e.changedTouches[0].screenY;
+            if (touchStartY - touchEndY > 50) goToSlide(currentSlide + 1); // Swipe Up
+            if (touchEndY - touchStartY > 50) goToSlide(currentSlide - 1); // Swipe Down
+        });
+
+        // Mouse Wheel Navigation
+        let isThrottled = false;
+        document.addEventListener('wheel', (e) => {
+            if (isThrottled) return;
+            isThrottled = true;
+            setTimeout(() => isThrottled = false, 800);
+            
+            if (e.deltaY > 0) goToSlide(currentSlide + 1);
+            else if (e.deltaY < 0) goToSlide(currentSlide - 1);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>W7: Capstone Hackathon - XBrain</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --orange: #fe7624;
+            --navy: #1e293b;
+            --cyan: #00b3d9;
+            --amber: #fbae42;
+            --bg-color: #f8fafc;
+            --text-color: #334155;
+            --card-bg: #ffffff;
+            --border-color: #e2e8f0;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            overflow: hidden; /* Hide scrollbars for full slide view */
+            line-height: 1.6;
+        }
+
+        code, pre {
+            font-family: 'JetBrains Mono', monospace;
+            background: #f1f5f9;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.9em;
+            color: var(--navy);
+        }
+
+        /* Slide Container */
+        #slide-container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            transition: transform 0.5s ease-in-out;
+        }
+
+        .slide {
+            min-width: 100vw;
+            height: 100vh;
+            padding: 4rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+            overflow-y: auto; /* Allow scrolling within slide if content is tall */
+        }
+
+        .slide.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Typography */
+        h1 {
+            color: var(--navy);
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            line-height: 1.2;
+        }
+        
+        h1 span {
+            color: var(--orange);
+        }
+
+        h2 {
+            color: var(--navy);
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 4px solid var(--cyan);
+            display: inline-block;
+            padding-bottom: 0.5rem;
+        }
+
+        h3 {
+            color: var(--cyan);
+            font-size: 1.5rem;
+            margin-top: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        p {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+        }
+
+        ul, ol {
+            margin-left: 2rem;
+            margin-bottom: 1.5rem;
+            font-size: 1.25rem;
+        }
+
+        li {
+            margin-bottom: 0.5rem;
+        }
+
+        /* Layouts */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .card {
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            border-top: 4px solid var(--amber);
+        }
+        
+        .card.orange-top { border-top-color: var(--orange); }
+        .card.cyan-top { border-top-color: var(--cyan); }
+        .card.navy-top { border-top-color: var(--navy); }
+
+        .highlight-box {
+            background-color: rgba(254, 118, 36, 0.1);
+            border-left: 6px solid var(--orange);
+            padding: 1.5rem;
+            border-radius: 0 8px 8px 0;
+            margin: 1.5rem 0;
+        }
+
+        .highlight-box.danger {
+            background-color: rgba(220, 38, 38, 0.1);
+            border-left-color: #dc2626;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            font-size: 1.1rem;
+            background: var(--card-bg);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        th, td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            background-color: var(--navy);
+            color: white;
+            font-weight: 600;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f8fafc;
+        }
+
+        /* Navigation Controls */
+        .controls {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            display: flex;
+            gap: 1rem;
+            z-index: 100;
+        }
+
+        .btn {
+            background: var(--navy);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+        }
+
+        .btn:hover { background: var(--cyan); }
+        .btn:active { transform: scale(0.95); }
+        .btn:disabled { background: #cbd5e1; cursor: not-allowed; }
+
+        .progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 6px;
+            background: var(--orange);
+            width: 0%;
+            transition: width 0.3s ease;
+            z-index: 100;
+        }
+
+        .logo {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            font-weight: 800;
+            font-size: 1.5rem;
+            color: var(--navy);
+            z-index: 100;
+        }
+        .logo span { color: var(--orange); }
+
+        /* Helpers */
+        .text-center { text-align: center; }
+        .mt-2 { margin-top: 2rem; }
+        .mb-2 { margin-bottom: 2rem; }
+        .tag {
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            background: var(--navy);
+            color: white;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin-right: 0.5rem;
+        }
+        .tag.mandatory { background: var(--orange); }
+        .tag.optional { background: var(--cyan); }
+    </style>
+</head>
+<body>
+
+    <div class="progress-bar" id="progress"></div>
+    <div class="logo">X<span>Brain</span></div>
+
+    <div id="slide-container">
+        
+        <!-- Slide 1: Title -->
+        <section class="slide">
+            <div class="text-center">
+                <h1>W7: Capstone Hackathon<br><span>Ship Production-Ready AI in 48 Hours</span></h1>
+                <p style="font-size: 1.5rem; color: var(--navy); margin-top: 2rem;">
+                    <strong>May 28–31, 2026</strong> | Personal AWS Account | $100 HARD CAP
+                </p>
+                <div class="grid-3 mt-2" style="max-width: 800px; margin-left: auto; margin-right: auto;">
+                    <div class="card orange-top">
+                        <h3>48 Hours</h3>
+                        <p>Wed-Thu Build Time</p>
+                    </div>
+                    <div class="card cyan-top">
+                        <h3>Real Accounts</h3>
+                        <p>Production billing</p>
+                    </div>
+                    <div class="card navy-top">
+                        <h3>Live Demo</h3>
+                        <p>Fri-Sat Presentations</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 2: The Challenge -->
+        <section class="slide">
+            <h2>The Challenge: What's Different?</h2>
+            <div class="highlight-box">
+                <strong>Goal:</strong> Build a live, public, production-ready AI SaaS platform in 48 hours.
+            </div>
+            <table>
+                <tr>
+                    <th>Aspect</th>
+                    <th>W1-W6 Workshop</th>
+                    <th>W7 Capstone</th>
+                </tr>
+                <tr>
+                    <td><strong>AWS Account</strong></td>
+                    <td>Trainer-managed, resets weekly</td>
+                    <td><strong>Personal account — real billing</strong></td>
+                </tr>
+                <tr>
+                    <td><strong>Cost</strong></td>
+                    <td>$0 to students</td>
+                    <td><strong>Real bill, $100 hard cap</strong></td>
+                </tr>
+                <tr>
+                    <td><strong>Deployment</strong></td>
+                    <td>Optional or partial</td>
+                    <td><strong>Mandatory — public HTTPS URL required</strong></td>
+                </tr>
+                <tr>
+                    <td><strong>Support</strong></td>
+                    <td>Trainers guide and teach</td>
+                    <td>Trainers triage blockers, not write code</td>
+                </tr>
+            </table>
+            <p><strong>What carries forward:</strong> Your W1-W6 skills. Everything you deployed in workshop accounts is gone.</p>
+        </section>
+
+        <!-- Slide 3: Choose Your Domain -->
+        <section class="slide">
+            <h2>Choose Your Domain</h2>
+            <p>The technical stack is identical regardless of domain. What differs is the user story and data type.</p>
+            <div class="grid-3">
+                <div class="card orange-top">
+                    <h3>📚 EduTech: "AI Study Buddy"</h3>
+                    <p><strong>Target:</strong> Students</p>
+                    <p><strong>Flow:</strong> Upload lecture PDFs → get summary, flashcards, Q&A.</p>
+                    <p><strong>Challenge:</strong> Extract structured info from unstructured slides (tables/images) & retrieve accurately.</p>
+                </div>
+                <div class="card cyan-top">
+                    <h3>💰 FinTech: "AI Money Coach"</h3>
+                    <p><strong>Target:</strong> Personal Budgeting</p>
+                    <p><strong>Flow:</strong> Upload bank statements → categorize transactions, spending insights.</p>
+                    <p><strong>Challenge:</strong> Dirty input classification (cryptic descriptions) & confidence scoring.</p>
+                </div>
+                <div class="card navy-top">
+                    <h3>🏢 ProductivityTech: "AI Doc Hub"</h3>
+                    <p><strong>Target:</strong> Legal/Compliance</p>
+                    <p><strong>Flow:</strong> Upload contracts → search across documents, multi-tenant isolation.</p>
+                    <p><strong>Challenge:</strong> Document confusion across tenants & managing version staleness.</p>
+                </div>
+            </div>
+        </section>
+
+        
+        <!-- Slide 3.5: Reference Architectures -->
+        <section class="slide">
+            <h2>AWS Reference Architectures</h2>
+            
+            <p>Below are real architecture images sourced directly from the internet (AWS Builder & Real-world solutions).</p>
+            <div class="grid-2" style="margin-top: 1rem; align-items: start;">
+                <div class="card orange-top">
+                    <h3 style="font-size: 1.2rem; text-align: center; margin-top: 0;">1. Real-World Architecture (AWS RAG)</h3>
+                    <p style="font-size: 0.9rem; text-align: center; color: #64748b; margin-bottom: 1rem;">Source: AWS Machine Learning Blog</p>
+                    <img src="https://d2908q01vomqb2.cloudfront.net/f1f836cb4ea6efb2a0b1b99f41ad8b103eff4b59/2024/05/13/ml-15933-rag-arch-new.jpg" alt="AWS RAG Architecture" style="width: 100%; border-radius: 8px; border: 1px solid #e2e8f0;">
+                </div>
+                <div class="card cyan-top">
+                    <h3 style="font-size: 1.2rem; text-align: center; margin-top: 0;">2. Hackathon/Builder Pattern</h3>
+                    <p style="font-size: 0.9rem; text-align: center; color: #64748b; margin-bottom: 1rem;">Source: Bedrock Agents Winning Project Pattern</p>
+                    <img src="https://d2908q01vomqb2.cloudfront.net/f1f836cb4ea6efb2a0b1b99f41ad8b103eff4b59/2024/05/15/ml-15933-archdiag-new2.png" alt="AWS Hackathon Architecture" style="width: 100%; border-radius: 8px; border: 1px solid #e2e8f0;">
+                </div>
+            </div>
+
+        </section>
+        
+        <!-- Slide 3.6: 2025-2026 Trends -->
+        <section class="slide">
+            <h2>2025-2026 Trends & Hackathon Winners</h2>
+            <p>Insights from Enterprise architectures and global AWS competitions.</p>
+            <div class="grid-3" style="margin-top: 1rem; align-items: start;">
+                <div class="card orange-top">
+                    <h3 style="font-size: 1.2rem; margin-top: 0;">📚 EduTech: Agentic RAG</h3>
+                    <p style="font-size: 1rem;"><strong>Project:</strong> <em>Ivy</em> (AWS 10,000 AIdeas 2026)</p>
+                    <p style="font-size: 1rem;"><strong>Real-World Solution:</strong> Moves beyond basic RAG to <strong>Self-Corrective RAG</strong>. The system autonomously plans learning paths based on error histories and handles low connectivity gracefully.</p>
+                </div>
+                <div class="card cyan-top">
+                    <h3 style="font-size: 1.2rem; margin-top: 0;">💰 FinTech: Hybrid Multi-Agent</h3>
+                    <p style="font-size: 1rem;"><strong>Project:</strong> <em>Sentinel</em> (GenAI Case 2025)</p>
+                    <p style="font-size: 1rem;"><strong>Real-World Solution:</strong> Avoids LLM-only approaches to cut costs. Uses a <strong>Hybrid Workflow</strong>: Regex for easy transactions, <strong>Supervisor Agent</strong> for complex ones. Adds Human-in-the-loop if confidence is low.</p>
+                </div>
+                <div class="card navy-top">
+                    <h3 style="font-size: 1.2rem; margin-top: 0;">🏢 Doc Hub: GraphRAG & MCP</h3>
+                    <p style="font-size: 1rem;"><strong>Project:</strong> <em>Privacy Guardian</em> (GenAI Impetus 2025)</p>
+                    <p style="font-size: 1rem;"><strong>Real-World Solution:</strong> Solves cross-tenant data leaks via <strong>Model Context Protocol (MCP)</strong> and <strong>GraphRAG</strong>. A multi-agent network safely scans documents before exposing them to the RAG pipeline.</p>
+                </div>
+            </div>
+            <div class="highlight-box mt-2" style="font-size: 1.1rem;">
+                <strong>💡 Demo Pro-Tip:</strong> Don't just say "We used Bedrock". Say <em>"We combined rule-based filtering with Bedrock Agents to optimize cost and introduced a review queue for low-confidence outputs."</em>
+            </div>
+        </section>
+        
+        
+        <!-- Slide 3.7: VIP Architecture -->
+        <section class="slide">
+            <h2>VIP Architecture: Multi-Tenant Doc Hub</h2>
+            <p>The B2B Enterprise architecture designed to score maximum points in <strong>Cost Discipline</strong> and <strong>Architecture</strong>.</p>
+            
+            <div style="display: flex; gap: 2rem; margin-top: 1rem; align-items: stretch;">
+                <div class="card" style="flex: 2;">
+                    <h3 style="margin-top: 0;">Data Flow (Pool Pattern)</h3>
+                    
+                    <div style="text-align: center; margin-top: 1rem;">
+                        <img src="https://d2908q01vomqb2.cloudfront.net/f1f836cb4ea6efb2a0b1b99f41ad8b103eff4b59/2024/02/11/ml-15933-001-1260x571.jpg" alt="AWS Multi-Tenant Doc Hub Architecture" style="width: 100%; border-radius: 8px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);">
+                        <p style="font-size: 0.85rem; color: #64748b; margin-top: 0.5rem;"><em>Source: AWS Machine Learning Blog (Advanced Knowledge Bases Architecture)</em></p>
+                    </div>
+
+                </div>
+
+                <div style="flex: 1; display: flex; flex-direction: column; gap: 1rem;">
+                    <div class="card orange-top">
+                        <h4 style="margin-top: 0;">1. Cost Discipline</h4>
+                        <p style="font-size: 0.95rem;">No separate DBs per tenant. Uses a single <strong>OpenSearch Pool</strong> separated only by metadata tags.</p>
+                    </div>
+                    <div class="card cyan-top">
+                        <h4 style="margin-top: 0;">2. Enterprise Security</h4>
+                        <p style="font-size: 0.95rem;">Forces <strong>tenant_id</strong> injection at the Lambda Authorizer level. Prevents frontend tampering or spoofing.</p>
+                    </div>
+                    <div class="card navy-top">
+                        <h4 style="margin-top: 0;">3. Anti-Hallucination</h4>
+                        <p style="font-size: 0.95rem;">Queries <strong>DynamoDB</strong> to filter out stale documents before RAG, ensuring the AI only cites the latest versions.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Slide 4: 7 Mandatory Capabilities -->
+
+
+
+        <section class="slide">
+            <h2>7 Mandatory Capabilities</h2>
+            <p>Every group MUST demonstrate all of these on Friday. Service choices must be justified.</p>
+            <div class="grid-2" style="font-size: 1.1rem;">
+                <div>
+                    <p><span class="tag mandatory">1</span> <strong>User-Facing Entry:</strong> Public HTTPS (e.g., CloudFront, ALB, API GW)</p>
+                    <p><span class="tag mandatory">2</span> <strong>Application Compute:</strong> Where code runs (e.g., Lambda, EC2, ECS)</p>
+                    <p><span class="tag mandatory">3</span> <strong>AI / ML Feature:</strong> Bedrock KB+Agent, or InvokeModel</p>
+                    <p><span class="tag mandatory">4</span> <strong>Data Persistence:</strong> User state across sessions (e.g., DynamoDB, RDS)</p>
+                </div>
+                <div>
+                    <p><span class="tag mandatory">5</span> <strong>Object Storage:</strong> Files/Blobs (S3)</p>
+                    <p><span class="tag mandatory">6</span> <strong>Network Foundation:</strong> DB not public-facing (VPC, private subnets, SGs)</p>
+                    <p><span class="tag mandatory">7</span> <strong>Identity & Access:</strong> IAM least-privilege roles for compute. (User auth is your choice: IAM/Cognito/Custom)</p>
+                </div>
+            </div>
+            <div class="highlight-box mt-2">
+                "Why did you pick this service for this capability?"<br>
+                <em>A strong answer connects to trade-offs (cost, speed, scale). "Because we knew it" is a weak answer.</em>
+            </div>
+        </section>
+
+        <!-- Slide 5: 3 Optional Capabilities -->
+        <section class="slide">
+            <h2>3 Optional Capabilities (Pick ONE)</h2>
+            <p>Do ONE well. Don't do all three halfway. Drives higher Likert scores for architecture.</p>
+            <div class="grid-3">
+                <div class="card">
+                    <h3><span class="tag optional">8</span> Full Observability</h3>
+                    <ul>
+                        <li>CloudWatch Dashboard</li>
+                        <li>At least 1 custom metric</li>
+                        <li>1 Alarm in OK/ALARM state</li>
+                        <li>1 saved Log Insights query</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h3><span class="tag optional">9</span> Advanced Cost Insights</h3>
+                    <ul>
+                        <li>3 daily Cost Explorer screenshots</li>
+                        <li>Cost-per-feature analysis</li>
+                        <li>Cost Anomaly Detection alert demo</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h3><span class="tag optional">10</span> Advanced Security</h3>
+                    <ul>
+                        <li>Pick ONE area to go deep:</li>
+                        <li>Encryption (KMS CMK rotation)</li>
+                        <li>Audit (Config/Security Hub)</li>
+                        <li>Secrets (Secrets Manager)</li>
+                        <li>Network (WAF/Strict SGs)</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 6: Pre-flight Safety -->
+        <section class="slide">
+            <h2>Pre-flight Safety (Required by Wed)</h2>
+            <p>Must be verified by your trainer before deploying paid infrastructure.</p>
+            <div class="highlight-box danger">
+                <strong>Failure to complete = No architecture sign-off</strong>
+            </div>
+            <ul style="font-size: 1.3rem;">
+                <li>🔒 <strong>MFA enabled</strong> on AWS root account.</li>
+                <li>💸 <strong>AWS Budget Alert</strong> created at $80 (80% of cap). SNS email MUST be confirmed.</li>
+                <li>📈 <strong>Cost Anomaly Detection</strong> enabled at account level.</li>
+                <li>🏷️ <strong>Tagging Strategy</strong> agreed: <code>Project=W7Capstone, Team=G&lt;N&gt;, Owner=&lt;name&gt;, Environment=hackathon</code></li>
+                <li>🤖 <strong>Bedrock Model Access</strong> requested & approved (e.g., Claude Haiku, Titan Embeddings v2).</li>
+            </ul>
+        </section>
+
+        <!-- Slide 7: Quality Bar -->
+        <section class="slide">
+            <h2>Hackathon Quality Bar: Ship, Don't Polish</h2>
+            <div class="grid-2">
+                <div class="card cyan-top">
+                    <h3 style="color: var(--navy)">✅ Graded (Focus Here)</h3>
+                    <ul>
+                        <li>Architecture decisions & rationale</li>
+                        <li>7 mandatory capabilities working</li>
+                        <li>Live URL functional for happy path</li>
+                        <li>AI feature produces real observable output</li>
+                        <li>Persistent state (write Thu, read Fri)</li>
+                        <li>Evidence Pack documentation</li>
+                        <li>Cost discipline (under $100 cap)</li>
+                    </ul>
+                </div>
+                <div class="card orange-top">
+                    <h3 style="color: var(--navy)">❌ NOT Graded (Skip This)</h3>
+                    <ul>
+                        <li>Code quality/structure (ugly code is fine)</li>
+                        <li>Frontend polish/design (basic HTML is fine)</li>
+                        <li>Comprehensive error handling (just log it)</li>
+                        <li>Unit/Integration tests</li>
+                        <li>Edge case handling</li>
+                        <li>Production-grade Cognito flow</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 8: Cost Discipline -->
+        <section class="slide">
+            <h2>Cost Discipline: $100 Hard Cap</h2>
+            <p>Your real account, your real money. Exceeding $100 caps your deployment score to a maximum of 3.</p>
+            
+            <div class="highlight-box">
+                <strong>Cost Survival Tips:</strong>
+                <ul>
+                    <li>Use cheapest sufficient model (e.g., Claude 3 Haiku) during dev.</li>
+                    <li>Avoid Multi-AZ RDS. Use single-AZ db.t3.micro.</li>
+                    <li>Skip NAT Gateway ($1.50/day) if possible; use VPC Endpoints.</li>
+                    <li>Delete unused resources daily (e.g., idle EC2s).</li>
+                </ul>
+            </div>
+            
+            <h3>Teardown Mandate</h3>
+            <p>By <strong>Sunday EOD</strong>, every resource must be deleted. Commit <code>teardown_confirmation.png</code> (Cost Explorer showing near-zero) to repo on Monday.</p>
+        </section>
+
+        <!-- Slide 9: Schedule & Evaluation -->
+        <section class="slide">
+            <h2>Schedule & Evaluation</h2>
+            
+            <table style="font-size: 1rem;">
+                <tr>
+                    <th style="width: 25%">Day</th>
+                    <th>Focus</th>
+                </tr>
+                <tr>
+                    <td><strong>Wed (Day 1)</strong></td>
+                    <td>Architecture Lock. Deploy Foundation (VPC, IAM). Deploy Core Services (API, Compute, DB). Happy path plumbing test.</td>
+                </tr>
+                <tr>
+                    <td><strong>Thu (Day 2)</strong></td>
+                    <td>AI Integration (Bedrock). Implement 1 Optional Capability. Write Evidence Pack. Record 3-min demo video (insurance!).</td>
+                </tr>
+                <tr>
+                    <td><strong>Fri-Sat (Demo)</strong></td>
+                    <td>40-min Presentation slots. Live URL must be ready.</td>
+                </tr>
+            </table>
+
+            <h3 class="mt-2">Scoring Breakdown (40-min slot)</h3>
+            <ul style="font-size: 1.1rem; display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <li><strong>10%</strong> - Pitch + Vision (5m)</li>
+                <li><strong>20%</strong> - Architecture Walkthrough (14m)</li>
+                <li><strong>30%</strong> - Individual QnA (12m - Anyone can be asked!)</li>
+                <li><strong>40%</strong> - Working Deployment + Evidence Pack (7m demo)</li>
+            </ul>
+        </section>
+
+    </div>
+
+    <!-- Navigation Controls -->
+    <div class="controls">
+        <button class="btn" id="prevBtn" onclick="changeSlide(-1)">Previous</button>
+        <button class="btn" id="nextBtn" onclick="changeSlide(1)">Next</button>
+    </div>
+
+    <script>
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        const slideContainer = document.getElementById('slide-container');
+        const progressBar = document.getElementById('progress');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+
+        function updateSlider() {
+            // Update container transform
+            slideContainer.style.transform = `translateX(-${currentSlide * 100}vw)`;
+            
+            // Update active classes for animations
+            slides.forEach((slide, index) => {
+                if (index === currentSlide) {
+                    slide.classList.add('active');
+                } else {
+                    slide.classList.remove('active');
+                }
+            });
+
+            // Update progress bar
+            const progress = ((currentSlide + 1) / slides.length) * 100;
+            progressBar.style.width = `${progress}%`;
+
+            // Update buttons
+            prevBtn.disabled = currentSlide === 0;
+            nextBtn.disabled = currentSlide === slides.length - 1;
+        }
+
+        function changeSlide(direction) {
+            currentSlide += direction;
+            if (currentSlide < 0) currentSlide = 0;
+            if (currentSlide >= slides.length) currentSlide = slides.length - 1;
+            updateSlider();
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === 'Space') {
+                changeSlide(1);
+            } else if (e.key === 'ArrowLeft') {
+                changeSlide(-1);
+            }
+        });
+
+        // Touch navigation
+        let touchStartX = 0;
+        document.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+        });
+        
+        document.addEventListener('touchend', e => {
+            let touchEndX = e.changedTouches[0].screenX;
+            if (touchStartX - touchEndX > 50) {
+                changeSlide(1); // Swipe left
+            } else if (touchEndX - touchStartX > 50) {
+                changeSlide(-1); // Swipe right
+            }
+        });
+
+        // Init
+        updateSlider();
+    </script>
+
+    <!-- Mermaid JS -->
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true, theme: 'base', themeVariables: { primaryColor: '#f1f5f9', primaryTextColor: '#1e293b', primaryBorderColor: '#00b3d9', lineColor: '#fe7624' } });
+    </script>
+</body>
+
+</html>
