@@ -46,3 +46,19 @@ output "admin_user_2_secret_key" {
   value       = aws_iam_access_key.admin_user_2_key.secret
   sensitive   = true
 }
+
+# --- FRONTEND OUTPUTS ---
+output "frontend_bucket_name" {
+  description = "S3 bucket name for the frontend static site"
+  value       = aws_s3_bucket.frontend.bucket
+}
+
+output "cloudfront_distribution_id" {
+  description = "CloudFront distribution ID for cache invalidation"
+  value       = aws_cloudfront_distribution.frontend.id
+}
+
+output "cloudfront_domain" {
+  description = "CloudFront domain name to access the frontend"
+  value       = aws_cloudfront_distribution.frontend.domain_name
+}

@@ -1,4 +1,10 @@
-import { AuthPage } from "@/components/marketing-pages"
+import { AuthPageClient } from "./client"
+
+const modes = ["sign-in", "sign-up"]
+
+export function generateStaticParams() {
+  return modes.map((mode) => ({ mode }))
+}
 
 export default async function AuthRoute({
   params,
@@ -6,5 +12,5 @@ export default async function AuthRoute({
   params: Promise<{ mode: string }>
 }) {
   const { mode } = await params
-  return <AuthPage mode={mode} />
+  return <AuthPageClient mode={mode} />
 }

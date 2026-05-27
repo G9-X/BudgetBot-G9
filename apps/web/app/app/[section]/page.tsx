@@ -1,8 +1,6 @@
-import { notFound } from "next/navigation"
+import { AppSectionClient } from "./client"
 
-import { MoneySection } from "@/components/money-views"
-
-const sections = new Set([
+const sections = [
   "overview",
   "import",
   "transactions",
@@ -13,7 +11,11 @@ const sections = new Set([
   "recurring",
   "coach",
   "settings",
-])
+]
+
+export function generateStaticParams() {
+  return sections.map((section) => ({ section }))
+}
 
 export default async function AppSectionPage({
   params,
@@ -21,9 +23,5 @@ export default async function AppSectionPage({
   params: Promise<{ section: string }>
 }) {
   const { section } = await params
-  if (!sections.has(section)) {
-    notFound()
-  }
-
-  return <MoneySection section={section} />
+  return <AppSectionClient section={section} />
 }

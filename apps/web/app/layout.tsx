@@ -1,5 +1,4 @@
 import type { Metadata } from "next"
-import { Geist_Mono, Manrope } from "next/font/google"
 
 import "@workspace/ui/globals.css"
 import { MoneyCoachProvider } from "@/components/money-coach-provider"
@@ -8,16 +7,6 @@ import { DirectionProvider } from "@workspace/ui/components/direction"
 import { Toaster } from "@workspace/ui/components/sonner"
 import { TooltipProvider } from "@workspace/ui/components/tooltip"
 import { cn } from "@workspace/ui/lib/utils"
-
-const fontSans = Manrope({
-  subsets: ["latin", "vietnamese"],
-  variable: "--font-sans",
-})
-
-const fontMono = Geist_Mono({
-  subsets: ["latin"],
-  variable: "--font-mono",
-})
 
 export const metadata: Metadata = {
   title: "Money Coach | Personal finance clarity",
@@ -35,13 +24,30 @@ export default function RootLayout({
       lang="vi"
       dir="ltr"
       suppressHydrationWarning
-      className={cn(
-        "antialiased",
-        fontMono.variable,
-        fontSans.variable,
-        "font-sans"
-      )}
+      className={cn("antialiased", "font-sans")}
     >
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link
+          rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossOrigin="anonymous"
+        />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@100..900&family=Manrope:wght@200..800&display=swap"
+          rel="stylesheet"
+        />
+        <style
+          dangerouslySetInnerHTML={{
+            __html: `
+              :root {
+                --font-sans: 'Manrope', ui-sans-serif, system-ui, sans-serif;
+                --font-mono: 'Geist Mono', ui-monospace, monospace;
+              }
+            `,
+          }}
+        />
+      </head>
       <body>
         <DirectionProvider dir="ltr">
           <ThemeProvider>
