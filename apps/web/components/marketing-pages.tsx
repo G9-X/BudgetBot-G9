@@ -92,21 +92,32 @@ export function LandingPage() {
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">Demo User</p>
-                    <p className="text-xs leading-none text-muted-foreground">demo@example.com</p>
+                    <p className="text-sm leading-none font-medium">
+                      Demo User
+                    </p>
+                    <p className="text-xs leading-none text-muted-foreground">
+                      demo@example.com
+                    </p>
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuGroup>
                   <DropdownMenuItem asChild>
-                    <Link href="/app/overview" className="cursor-pointer w-full">
+                    <Link
+                      href="/app/overview"
+                      className="w-full cursor-pointer"
+                    >
                       <UserIcon className="mr-2 h-4 w-4" />
-                      <span>{locale === "vi" ? "Dashboard của tôi" : "My Dashboard"}</span>
+                      <span>
+                        {locale === "vi" ? "Dashboard của tôi" : "My Dashboard"}
+                      </span>
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem>
                     <Sparkles className="mr-2 h-4 w-4" />
-                    <span>{locale === "vi" ? "Nâng cấp Pro" : "Upgrade to Pro"}</span>
+                    <span>
+                      {locale === "vi" ? "Nâng cấp Pro" : "Upgrade to Pro"}
+                    </span>
                   </DropdownMenuItem>
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />
@@ -327,8 +338,27 @@ function Feature({
 
 export function AuthPage({ mode }: { mode: string }) {
   const router = useRouter()
-  const { locale, signIn } = useMoneyCoach()
-  const [submitted, setSubmitted] = React.useState(false)
+  const {
+    locale,
+    signIn,
+    signUp,
+    confirmSignUp,
+    resendConfirmationCode,
+    forgotPassword,
+    confirmPassword,
+  } = useMoneyCoach()
+
+  const [email, setEmail] = React.useState("")
+  const [password, setPassword] = React.useState("")
+  const [code, setCode] = React.useState("")
+  const [newPassword, setNewPassword] = React.useState("")
+  const [confirmNewPassword, setConfirmNewPassword] = React.useState("")
+
+  const [loading, setLoading] = React.useState(false)
+  const [errorMsg, setErrorMsg] = React.useState("")
+  const [successMsg, setSuccessMsg] = React.useState("")
+  const [forgotStep, setForgotStep] = React.useState(1) // 1 = request code, 2 = reset password
+
   const validMode = [
     "sign-in",
     "sign-up",
@@ -337,36 +367,175 @@ export function AuthPage({ mode }: { mode: string }) {
   ].includes(mode)
   const currentMode = validMode ? mode : "sign-in"
 
+  // Pull query parameters safely on the client to avoid Next.js static pre-rendering Suspense issues
+  React.useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search)
+      const emailParam = params.get("email") || ""
+      if (emailParam) {
+        setEmail(emailParam)
+      }
+
+      if (params.get("verified") === "true") {
+        setSuccessMsg(
+          locale === "vi"
+            ? "Xác minh tài khoản thành công! Bạn đã có thể đăng nhập."
+            : "Account verified successfully! You can now sign in."
+        )
+      } else if (params.get("resetSuccess") === "true") {
+        setSuccessMsg(
+          locale === "vi"
+            ? "Đặt lại mật khẩu thành công! Hãy đăng nhập với mật khẩu mới."
+            : "Password reset successful! Please sign in with your new password."
+        )
+      }
+    }
+  }, [locale])
+
   function enterDemo() {
     signIn()
     router.push("/app/overview")
   }
 
+  // Handle Verify Mode
   if (currentMode === "verify") {
     return (
       <AuthFrame>
         <Card>
           <CardHeader>
             <CardTitle>
-              {locale === "vi" ? "Kiểm tra email của bạn" : "Check your email"}
+              {locale === "vi" ? "Xác minh tài khoản" : "Verify account"}
             </CardTitle>
             <CardDescription>
               {locale === "vi"
-                ? "Chúng tôi đã gửi liên kết xác minh. Đây là trạng thái mô phỏng cho tích hợp Supabase Auth sau này."
-                : "We sent a verification link. This is a mock state prepared for future Supabase Auth integration."}
+                ? "Nhập mã xác thực gồm 6 chữ số gửi đến email của bạn."
+                : "Enter the 6-digit verification code sent to your email."}
             </CardDescription>
           </CardHeader>
-          <CardContent className="flex flex-col gap-3">
-            <Button onClick={enterDemo}>
-              {locale === "vi"
-                ? "Tiếp tục bằng tài khoản demo"
-                : "Continue with demo account"}
-            </Button>
-            <Button variant="outline" asChild>
-              <Link href="/auth/sign-in">
+          <CardContent>
+            {errorMsg && (
+              <Alert variant="destructive" className="mb-4">
+                <AlertDescription>{errorMsg}</AlertDescription>
+              </Alert>
+            )}
+            {successMsg && (
+              <Alert className="mb-4">
+                <CheckCircle2Icon className="text-primary" />
+                <AlertDescription>{successMsg}</AlertDescription>
+              </Alert>
+            )}
+            <form
+              onSubmit={async (event) => {
+                event.preventDefault()
+                setLoading(true)
+                setErrorMsg("")
+                setSuccessMsg("")
+                try {
+                  await confirmSignUp(email, code)
+                  router.push(
+                    `/auth/sign-in?verified=true&email=${encodeURIComponent(email)}`
+                  )
+                } catch (err: any) {
+                  setErrorMsg(
+                    err.message ||
+                      (locale === "vi"
+                        ? "Xác minh thất bại. Vui lòng kiểm tra lại mã."
+                        : "Verification failed. Please check your code.")
+                  )
+                } finally {
+                  setLoading(false)
+                }
+              }}
+            >
+              <FieldGroup>
+                <Field>
+                  <FieldLabel htmlFor="email">Email</FieldLabel>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="minh@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor="code">
+                    {locale === "vi" ? "Mã xác thực" : "Verification Code"}
+                  </FieldLabel>
+                  <Input
+                    id="code"
+                    type="text"
+                    placeholder="123456"
+                    value={code}
+                    onChange={(e) => setCode(e.target.value)}
+                    required
+                  />
+                </Field>
+                <Button type="submit" disabled={loading}>
+                  {loading
+                    ? locale === "vi"
+                      ? "Đang xác thực..."
+                      : "Verifying..."
+                    : locale === "vi"
+                      ? "Xác thực"
+                      : "Verify"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={loading}
+                  onClick={async () => {
+                    if (!email) {
+                      setErrorMsg(
+                        locale === "vi"
+                          ? "Vui lòng nhập email trước khi yêu cầu gửi lại mã."
+                          : "Please enter your email before requesting a code resend."
+                      )
+                      return
+                    }
+                    setLoading(true)
+                    setErrorMsg("")
+                    setSuccessMsg("")
+                    try {
+                      await resendConfirmationCode(email)
+                      setSuccessMsg(
+                        locale === "vi"
+                          ? "Đã gửi lại mã xác thực thành công!"
+                          : "Verification code resent successfully!"
+                      )
+                    } catch (err: any) {
+                      setErrorMsg(
+                        err.message ||
+                          (locale === "vi"
+                            ? "Không thể gửi lại mã."
+                            : "Failed to resend code.")
+                      )
+                    } finally {
+                      setLoading(false)
+                    }
+                  }}
+                >
+                  {locale === "vi"
+                    ? "Gửi lại mã xác thực"
+                    : "Resend Verification Code"}
+                </Button>
+                <FieldSeparator>
+                  {locale === "vi" ? "hoặc" : "or"}
+                </FieldSeparator>
+                <Button type="button" variant="outline" onClick={enterDemo}>
+                  {locale === "vi" ? "Dùng tài khoản demo" : "Use demo account"}
+                </Button>
+              </FieldGroup>
+            </form>
+            <div className="mt-5 text-center text-sm">
+              <Link
+                href="/auth/sign-in"
+                className="text-muted-foreground hover:text-foreground"
+              >
                 {locale === "vi" ? "Quay lại đăng nhập" : "Back to sign in"}
               </Link>
-            </Button>
+            </div>
           </CardContent>
         </Card>
       </AuthFrame>
@@ -375,6 +544,80 @@ export function AuthPage({ mode }: { mode: string }) {
 
   const isSignup = currentMode === "sign-up"
   const isForgot = currentMode === "forgot-password"
+
+  // Handle Sign In, Sign Up, and Forgot Password Forms
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault()
+    setLoading(true)
+    setErrorMsg("")
+    setSuccessMsg("")
+
+    try {
+      if (isForgot) {
+        if (forgotStep === 1) {
+          await forgotPassword(email)
+          setSuccessMsg(
+            locale === "vi"
+              ? "Mã đặt lại mật khẩu đã được gửi đến email của bạn."
+              : "A password reset code has been sent to your email."
+          )
+          setForgotStep(2)
+        } else {
+          if (newPassword !== confirmNewPassword) {
+            setErrorMsg(
+              locale === "vi"
+                ? "Mật khẩu xác nhận không khớp."
+                : "Confirm password does not match."
+            )
+            return
+          }
+          await confirmPassword(email, code, newPassword)
+          setSuccessMsg(
+            locale === "vi"
+              ? "Đặt lại mật khẩu thành công! Đang chuyển hướng..."
+              : "Password reset successful! Redirecting..."
+          )
+          setTimeout(() => {
+            router.push("/auth/sign-in?resetSuccess=true")
+          }, 1500)
+        }
+      } else if (isSignup) {
+        await signUp(email, password)
+        setSuccessMsg(
+          locale === "vi"
+            ? "Đăng ký thành công! Đang chuyển đến trang xác thực..."
+            : "Sign up successful! Redirecting to verification page..."
+        )
+        setTimeout(() => {
+          router.push(`/auth/verify?email=${encodeURIComponent(email)}`)
+        }, 1500)
+      } else {
+        await signIn(email, password)
+        router.push("/app/overview")
+      }
+    } catch (err: any) {
+      console.error(err)
+      if (err.code === "UserNotConfirmedException") {
+        setErrorMsg(
+          locale === "vi"
+            ? "Tài khoản của bạn chưa được xác thực. Đang chuyển hướng đến trang xác thực..."
+            : "Your account is not confirmed yet. Redirecting to verification page..."
+        )
+        setTimeout(() => {
+          router.push(`/auth/verify?email=${encodeURIComponent(email)}`)
+        }, 1500)
+      } else {
+        setErrorMsg(
+          err.message ||
+            (locale === "vi"
+              ? "Đã xảy ra lỗi. Vui lòng kiểm tra lại thông tin."
+              : "An error occurred. Please verify your details.")
+        )
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return (
     <AuthFrame>
@@ -395,88 +638,151 @@ export function AuthPage({ mode }: { mode: string }) {
           </CardTitle>
           <CardDescription>
             {locale === "vi"
-              ? "Giao diện xác thực demo. Supabase Auth sẽ được nối ở phase backend."
-              : "Authentication UI demo. Supabase Auth will be connected in the backend phase."}
+              ? "Hệ thống bảo mật bởi AWS Cognito."
+              : "Secured by AWS Cognito authentication."}
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {submitted ? (
-            <Alert>
-              <CheckCircle2Icon />
-              <AlertDescription>
-                {locale === "vi"
-                  ? "Email mô phỏng đã được gửi. Bạn có thể tiếp tục bằng demo."
-                  : "Mock email sent. You can continue with the demo account."}
-              </AlertDescription>
+          {errorMsg && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertDescription>{errorMsg}</AlertDescription>
             </Alert>
-          ) : null}
-          <form
-            className="mt-4"
-              onSubmit={async (event) => {
-                event.preventDefault()
-                if (isForgot) {
-                  setSubmitted(true)
-                } else if (isSignup) {
-                  router.push("/auth/verify")
-                } else {
-                  try {
-                    const form = event.currentTarget as HTMLFormElement
-                    const emailInput = form.elements.namedItem("email") as HTMLInputElement
-                    const passwordInput = form.elements.namedItem("password") as HTMLInputElement
-                    await signIn(emailInput?.value, passwordInput?.value)
-                    router.push("/app/overview")
-                  } catch (e) {
-                    alert("Đăng nhập thất bại. Vui lòng kiểm tra lại email và mật khẩu.")
-                  }
-                }
-              }}
-          >
+          )}
+          {successMsg && (
+            <Alert className="mb-4">
+              <CheckCircle2Icon className="text-primary" />
+              <AlertDescription>{successMsg}</AlertDescription>
+            </Alert>
+          )}
+
+          <form className="mt-4" onSubmit={handleSubmit}>
             <FieldGroup>
-              <Field>
-                <FieldLabel htmlFor="email">Email</FieldLabel>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  placeholder="minh@example.com"
-                  defaultValue="demo@example.com"
-                  required
-                />
-              </Field>
-              {!isForgot ? (
+              {/* Step 1 for Forgot Password, or standard for Sign In / Sign Up */}
+              {(!isForgot || forgotStep === 1) && (
+                <Field>
+                  <FieldLabel htmlFor="email">Email</FieldLabel>
+                  <Input
+                    id="email"
+                    name="email"
+                    type="email"
+                    placeholder="minh@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
+                </Field>
+              )}
+
+              {/* Standard Password Field for Sign In / Sign Up */}
+              {!isForgot && (
                 <Field>
                   <FieldLabel htmlFor="password">
                     {locale === "vi" ? "Mật khẩu" : "Password"}
                   </FieldLabel>
-                  <Input id="password" name="password" type="password" defaultValue="password123" minLength={8} required />
-                  {isSignup ? (
+                  <Input
+                    id="password"
+                    name="password"
+                    type="password"
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    minLength={8}
+                    required
+                  />
+                  {isSignup && (
                     <FieldDescription>
                       {locale === "vi"
                         ? "Tối thiểu 8 ký tự."
                         : "At least 8 characters."}
                     </FieldDescription>
-                  ) : null}
+                  )}
                 </Field>
-              ) : null}
-              <Button type="submit">
-                {isForgot
+              )}
+
+              {/* Step 2 for Forgot Password (Enter Code & New Password) */}
+              {isForgot && forgotStep === 2 && (
+                <>
+                  <Field>
+                    <FieldLabel htmlFor="reset-code">
+                      {locale === "vi" ? "Mã khôi phục" : "Reset Code"}
+                    </FieldLabel>
+                    <Input
+                      id="reset-code"
+                      type="text"
+                      placeholder="123456"
+                      value={code}
+                      onChange={(e) => setCode(e.target.value)}
+                      required
+                    />
+                  </Field>
+                  <Field>
+                    <FieldLabel htmlFor="new-password">
+                      {locale === "vi" ? "Mật khẩu mới" : "New Password"}
+                    </FieldLabel>
+                    <Input
+                      id="new-password"
+                      type="password"
+                      placeholder="••••••••"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      minLength={8}
+                      required
+                    />
+                  </Field>
+                  <Field>
+                    <FieldLabel htmlFor="confirm-new-password">
+                      {locale === "vi"
+                        ? "Xác nhận mật khẩu mới"
+                        : "Confirm New Password"}
+                    </FieldLabel>
+                    <Input
+                      id="confirm-new-password"
+                      type="password"
+                      placeholder="••••••••"
+                      value={confirmNewPassword}
+                      onChange={(e) => setConfirmNewPassword(e.target.value)}
+                      minLength={8}
+                      required
+                    />
+                  </Field>
+                </>
+              )}
+
+              <Button type="submit" disabled={loading}>
+                {loading
                   ? locale === "vi"
-                    ? "Gửi liên kết"
-                    : "Send reset link"
-                  : isSignup
-                    ? locale === "vi"
-                      ? "Đăng ký"
-                      : "Sign up"
-                    : locale === "vi"
-                      ? "Đăng nhập"
-                      : "Sign in"}
+                    ? "Đang xử lý..."
+                    : "Processing..."
+                  : isForgot
+                    ? forgotStep === 1
+                      ? locale === "vi"
+                        ? "Gửi mã khôi phục"
+                        : "Send reset code"
+                      : locale === "vi"
+                        ? "Đặt lại mật khẩu"
+                        : "Reset password"
+                    : isSignup
+                      ? locale === "vi"
+                        ? "Đăng ký"
+                        : "Sign up"
+                      : locale === "vi"
+                        ? "Đăng nhập"
+                        : "Sign in"}
               </Button>
+
               <FieldSeparator>{locale === "vi" ? "hoặc" : "or"}</FieldSeparator>
-              <Button type="button" variant="outline" onClick={enterDemo}>
+
+              <Button
+                type="button"
+                variant="outline"
+                onClick={enterDemo}
+                disabled={loading}
+              >
                 {locale === "vi" ? "Dùng tài khoản demo" : "Use demo account"}
               </Button>
             </FieldGroup>
           </form>
+
           <div className="mt-5 flex justify-between gap-4 text-sm text-muted-foreground">
             {!isSignup && !isForgot ? (
               <>
