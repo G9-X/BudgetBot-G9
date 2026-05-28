@@ -18,7 +18,9 @@ class Config:
     ai_backend: str = _env("AI_BACKEND", "ollama")
     ai_model_id: str = _env("AI_MODEL_ID", "llama3.1:8b")
     ollama_url: str = _env("OLLAMA_URL", "http://localhost:11434")
-    aws_region: str = _env("AWS_REGION", "ap-southeast-1")
+    aws_region: str = _env("AWS_REGION", "us-west-2")
+    cognito_user_pool_id: str = _env("COGNITO_USER_POOL_ID", "")
+    cognito_client_id: str = _env("COGNITO_CLIENT_ID", "")
 
     storage_backend: str = _env("STORAGE_BACKEND", "local")
     storage_bucket: str = _env("STORAGE_BUCKET", "")
