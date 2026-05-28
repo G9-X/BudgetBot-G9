@@ -204,7 +204,7 @@ Evidence images:
 ![AiFeatureDegraded](evidence_images/monitoring/Full_Observability/alarm/03_ai_feature_end_to_end_failure/Picture/AiFeatureDegraded.png)
 
 ### 8.2 Log Insights Query
-(evidence_images/monitoring/Full_Observability/alarm/log_insights.png)
+![log_insights](evidence_images/monitoring/Full_Observability/alarm/log_insights.png)
 #### Case 1: Public HTTPS App Unavailable (Recent Backend Errors)
 **Mục đích:** 
 Điều tra hệ thống khi nhận được cảnh báo `UserFacingCritical` (ứng dụng web không truy cập được). Truy vấn này lọc toàn bộ API Gateway và Lambda Logs để tìm các request bị lỗi (HTTP 5xx, Timeout, Exception). Mục đích cốt lõi là xác định nhanh `request_id`, `route` bị ảnh hưởng và phân biệt lỗi này là do định tuyến mạng (Public Routing) hay do backend/dependency bị sập.
