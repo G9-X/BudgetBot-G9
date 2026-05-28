@@ -1767,11 +1767,13 @@ function Coach() {
     setIsThinking(true)
 
     try {
-      const answer = await askCoach(trimmed)
+      const res = await askCoach(trimmed)
       const assistantMessage: CoachMessage = {
         id: `assistant-${messageId}`,
         role: "assistant",
-        content: answer,
+        content: res.answer,
+        steps: res.steps,
+        sources: res.sources,
         createdAt: "",
       }
       setMessages((current) => [...current, assistantMessage])

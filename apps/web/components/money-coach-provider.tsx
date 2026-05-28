@@ -25,7 +25,9 @@ interface MoneyCoachContextValue {
     category: Category,
     rememberRule?: boolean
   ) => Promise<void>
-  askCoach: (message: string) => Promise<string>
+  askCoach: (
+    message: string
+  ) => Promise<{ answer: string; steps?: string[]; sources?: any[] }>
   toggleRecurring: (id: string) => void
   updateBudget: (category: Category, limit: number) => void
   resetData: () => void
@@ -351,23 +353,32 @@ export function MoneyCoachProvider({
     [state.transactions]
   )
 
-  const askCoach = React.useCallback(async (message: string): Promise<string> => {
-    try {
-      const res = await fetch(`${API_BASE_URL}/chat`, {
-        method: "POST",
-        headers: getAuthHeaders({ "Content-Type": "application/json" }),
-        body: JSON.stringify({ message }),
-      })
-      if (!res.ok) {
-        throw new Error("Chat request failed")
+  const askCoach = React.useCallback(
+    async (
+      message: string
+    ): Promise<{ answer: string; steps?: string[]; sources?: any[] }> => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/chat`, {
+          method: "POST",
+          headers: getAuthHeaders({ "Content-Type": "application/json" }),
+          body: JSON.stringify({ message }),
+        })
+        if (!res.ok) {
+          throw new Error("Chat request failed")
+        }
+        const data = await res.json()
+        return {
+          answer: data.answer || "Không có phản hồi từ AI.",
+          steps: data.steps || [],
+          sources: data.sources || [],
+        }
+      } catch (err) {
+        console.error("Chat failed:", err)
+        throw err
       }
-      const data = await res.json()
-      return data.answer || "Không có phản hồi từ AI."
-    } catch (err) {
-      console.error("Chat failed:", err)
-      throw err
-    }
-  }, [])
+    },
+    []
+  )
 
   const toggleRecurring = React.useCallback((id: string) => {
     setState((current) => ({
