@@ -27,6 +27,11 @@ out/
 build
 dist
 
+# Terraform local state
+.terraform/
+*.tfstate
+*.tfstate.backup
+
 
 # Debug
 npm-debug.log*

@@ -32,6 +32,17 @@ This project is built as a monorepo managed by [Bun](https://bun.sh/) and [Turbo
 - `bun run typecheck`: Check TypeScript without emitting files.
 - `bun run format`: Format workspace TypeScript and TSX files with Prettier.
 
+## ECC & Codex Configuration
+
+This repo includes project-local ECC/Codex configuration:
+
+- `.codex/config.toml`: Codex defaults, MCP servers, and multi-agent settings.
+- `.codex/agents/`: read-only explorer, reviewer, and docs researcher roles.
+- `.agents/skills/`: reusable ECC workflows for TDD, security review, verification, frontend/backend work, FastAPI, Postgres, deployment, and research.
+- `.agents/rules/`: common, TypeScript, Python, and web engineering rules.
+
+Configured MCP servers include GitHub, Context7, Exa, Memory, Playwright, and Sequential Thinking. Keep credentialed or heavier integrations user-level unless a task specifically needs them.
+
 ## Project Structure
 
 - `apps/web/`: The main Next.js web application. Routes and layouts are in `app/`, and app-specific components are in `components/`.

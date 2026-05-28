@@ -1,5 +1,16 @@
 # Repository Guidelines
 
+## ECC & Codex Configuration
+
+Project-level ECC assets live in `.agents/` and `.codex/`.
+Use `.agents/skills/` for reusable task workflows, `.agents/rules/` for
+project-local engineering rules, and `.codex/config.toml` for Codex MCP and
+multi-agent defaults. Repo-local Codex agents are defined in `.codex/agents/`.
+
+The default Codex surface for this repo includes GitHub, Context7, Exa,
+Memory, Playwright, and Sequential Thinking MCP servers. Keep heavier or
+credentialed integrations user-level unless a task needs them.
+
 ## Project Structure & Module Organization
 
 This monorepo is initialized as a Bun-managed Turborepo.
