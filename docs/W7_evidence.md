@@ -105,15 +105,18 @@ Respond with JSON only. No explanation.
 
 ## 8. Monitoring (Optional Capability #8: Full Observability)
 
-### Scope
+### 8.1 CloudWatch Alarms
 CloudWatch monitoring evidence is stored under `docs/evidence_images/monitoring/Full_Observability/`.
 
-This monitoring implementation covers three alarm groups:
-- Public HTTPS availability through CloudWatch Synthetics and supporting Lambda backend signals.
-- Backend compute health for `budget-bot-chat` and `budget-bot-upload` using native `AWS/Lambda` metrics.
-- AI feature health using native `AWS/Bedrock` metrics and a Lambda log-derived fallback metric.
+This monitoring implementation covers three alarm scopes:
 
-### 8.1 Public HTTPS App Unavailable
+| Scope | Coverage | Detail |
+| --- | --- | --- |
+| 01 | Public HTTPS availability through CloudWatch Synthetics and supporting Lambda backend signals | [01 - Public HTTPS App Unavailable](evidence_images/monitoring/Full_Observability/alarm/01_public_https_app_unavailable.md) |
+| 02 | Backend compute health for `budget-bot-chat` and `budget-bot-upload` using native `AWS/Lambda` metrics | [02 - Backend Compute Failure](evidence_images/monitoring/Full_Observability/alarm/02_backend_compute_failure.md) |
+| 03 | AI feature health using native `AWS/Bedrock` metrics and a Lambda log-derived fallback metric | [03 - AI Feature End-to-End Failure](evidence_images/monitoring/Full_Observability/alarm/03_ai_feature_end_to_end_failure.md) |
+
+#### Scope 01: Public HTTPS App Unavailable
 Problem:
 - Detect when the public HTTPS app endpoint cannot be reached from outside the application.
 - User impact: app cannot open, request timeout, health check failure, or unexpected canary failure.
@@ -125,8 +128,6 @@ Objective:
 - Use Lambda alarms `Backend5xxOrErrorRateHigh` and `BackendHighLatency` to identify backend-related public outage.
 
 Alarms:
-
-Chi tiết: [01 - Public HTTPS App Unavailable](evidence_images/monitoring/Full_Observability/alarm/01_public_https_app_unavailable.md)
 
 | Alarm | Source | Condition | Action |
 | --- | --- | --- | --- |
@@ -145,7 +146,7 @@ Evidence images:
 ![UserFacingCritical](evidence_images/monitoring/Full_Observability/alarm/01_public_https_app_unavailable/Picture/UserFacingCritical.png)
 ![UserFacingBackendSuspected](evidence_images/monitoring/Full_Observability/alarm/01_public_https_app_unavailable/Picture/UserFacingBackendSuspected.png)
 
-### 8.2 Backend Compute Failure
+#### Scope 02: Backend Compute Failure
 Problem:
 - Detect when backend Lambda compute has execution errors, throttles, or near-timeout duration.
 - User impact: slow requests, 5xx responses, failed upload/chat workflows.
@@ -158,8 +159,6 @@ Objective:
 - Page only through `BackendComputeCritical` when compute signal is combined with `UserFacingCritical`.
 
 Alarms:
-
-Chi tiết: [02 - Backend Compute Failure](evidence_images/monitoring/Full_Observability/alarm/02_backend_compute_failure.md)
 
 | Alarm | Source | Condition | Action |
 | --- | --- | --- | --- |
@@ -174,7 +173,7 @@ Evidence images:
 ![ComputeDurationNearTimeout](evidence_images/monitoring/Full_Observability/alarm/02_backend_compute_failure/Picture/ComputeDurationNearTimeout.png)
 ![BackendComputeCritical](evidence_images/monitoring/Full_Observability/alarm/02_backend_compute_failure/Picture/BackendComputeCritical.png)
 
-### 8.3 AI Feature End-to-End Failure
+#### Scope 03: AI Feature End-to-End Failure
 Problem:
 - Detect when the Bedrock-backed AI feature fails, becomes slow, reaches quota pressure, or falls back.
 - User impact: lower-quality fallback, delayed AI response, or failed AI workflow.
@@ -186,8 +185,6 @@ Objective:
 - Page only through `AiFeatureCritical` when AI failure/quota pressure is combined with `UserFacingCritical` or `BackendComputeCritical`.
 
 Alarms:
-
-Chi tiết: [03 - AI Feature End-to-End Failure](evidence_images/monitoring/Full_Observability/alarm/03_ai_feature_end_to_end_failure.md)
 
 | Alarm | Source | Condition | Action |
 | --- | --- | --- | --- |
@@ -206,7 +203,7 @@ Evidence images:
 ![AiFeatureCritical](evidence_images/monitoring/Full_Observability/alarm/03_ai_feature_end_to_end_failure/Picture/AiFeatureCritical.png)
 ![AiFeatureDegraded](evidence_images/monitoring/Full_Observability/alarm/03_ai_feature_end_to_end_failure/Picture/AiFeatureDegraded.png)
 
-### Log Insights Query
+### 8.2 Log Insights Query
 ```sql
 fields @timestamp, @message, @logStream
 | filter @message like /ERROR|Exception|Task timed out/
