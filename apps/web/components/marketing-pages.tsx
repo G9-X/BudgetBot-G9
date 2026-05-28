@@ -57,7 +57,8 @@ function Copy({ vi, en }: { vi: string; en: string }) {
 }
 
 export function LandingPage() {
-  const { locale, setLocale } = useMoneyCoach()
+  const { locale, setLocale, signedIn, signOut } = useMoneyCoach()
+  const router = useRouter()
 
   return (
     <div className="min-h-svh bg-background">
