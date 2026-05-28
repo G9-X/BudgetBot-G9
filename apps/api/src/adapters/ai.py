@@ -75,7 +75,7 @@ class BedrockAI:
             print(f"Bedrock Categorize Error: {e}")
             return {"category": "Other", "confidence": 0.0}
 
-    def chat(self, user_id: str, question: str) -> str:
+    def chat(self, user_id: str, question: str) -> dict:
         """AI Money Coach powered by Bedrock Converse API Tool Use (Client-managed RAG & Actions)."""
         
         # 1. Định nghĩa danh sách các Tools chuẩn JSON Schema gửi cho Bedrock
@@ -100,7 +100,7 @@ class BedrockAI:
             {
                 "toolSpec": {
                     "name": "list_transactions",
-                    "description": "Lấy danh sách các giao dịch tài chính chi tiết của người dùng từ cơ sở dữ liệu để phân tích dòng tiền.",
+                    "description": "Lấy danh sách các giao dịch tài chính chi tiết của người dùng từ cơ sở dữ liệu để phân tích dòng tiền, kiểm tra xem người dùng đã mua những vật phẩm gì, danh sách chi tiêu cụ thể, tìm kiếm giao dịch đã xảy ra theo số tiền hoặc nội dung.",
                     "inputSchema": {
                         "json": {
                             "type": "object",
@@ -117,7 +117,7 @@ class BedrockAI:
             {
                 "toolSpec": {
                     "name": "create_transaction",
-                    "description": "Ghi nhận/Thêm thủ công một giao dịch chi tiêu hoặc thu nhập mới vào cơ sở dữ liệu khi người dùng yêu cầu.",
+                    "description": "Ghi nhận/Thêm thủ công một giao dịch chi tiêu hoặc thu nhập mới vào cơ sở dữ liệu khi người dùng YÊU CẦU THÊM MỚI rõ ràng (ví dụ: 'thêm giao dịch...', 'add txn...', 'ghi nhận giùm tôi...'). TUYỆT ĐỐI KHÔNG sử dụng khi người dùng chỉ hỏi về giao dịch đã xảy ra hoặc chi tiêu cũ.",
                     "inputSchema": {
                         "json": {
                             "type": "object",
@@ -167,16 +167,17 @@ class BedrockAI:
 
         system_prompt = """You are a helpful and intelligent AI Money Coach for G9 Personal Finance.
 You have secure access to the user's database through the provided tools.
-Always use the tools dynamically to query their real financial summary, list transactions, create new transactions, or parse CSV text when they ask.
-If the user's question requires actual spending details or calculations, call 'get_spending_summary' or 'list_transactions' first to ensure 100% accuracy.
-Ground your answers strictly on the tool results returned. Do not hallucinate or guess numbers.
-Respond in a friendly, actionable, and structured manner.
-Always format currency in VND (e.g. 100.000 ₫).
-You must speak the same language as the user's question (usually Vietnamese)."""
+- DO NOT call 'create_transaction' unless the user explicitly requests you to ADD, CREATE, or RECORD a new transaction (e.g., "thêm giao dịch...", "ghi nhận giùm tôi khoản chi..."). If they are just asking/querying about what they bought, what items they spent money on, or about any past amounts (e.g., "vật phẩm gì giá 32 triệu vậy", "tôi chi nhiều nhất vào đâu"), you MUST use 'list_transactions' or 'get_spending_summary' to query the existing database, NEVER create a transaction.
+- If the user's question requires actual spending details or calculations, call 'get_spending_summary' or 'list_transactions' first to ensure 100% accuracy.
+- Ground your answers strictly on the tool results returned. Do not hallucinate or guess numbers.
+- Respond in a friendly, actionable, and structured manner.
+- Always format currency in VND (e.g. 100.000 ₫).
+- You must speak the same language as the user's question (usually Vietnamese)."""
 
         # Bắt đầu luồng gọi Agentic Tool Calling
         messages = [{"role": "user", "content": [{"text": question}]}]
         max_steps = 5  # Giới hạn số bước để tránh vòng lặp vô hạn
+        tools_called = []
         
         # Import động các hàm cần thiết từ handlers và factory
         from src import handlers
@@ -196,7 +197,10 @@ You must speak the same language as the user's question (usually Vietnamese)."""
                 )
             except Exception as e:
                 print(f"Bedrock converse error at step {step}: {e}")
-                return f"Xin lỗi, tôi gặp sự cố khi trò chuyện với AI: {str(e)}"
+                return {
+                    "answer": f"Xin lỗi, tôi gặp sự cố khi trò chuyện với AI: {str(e)}",
+                    "steps": tools_called
+                }
 
             output_message = resp["output"]["message"]
             messages.append(output_message)
@@ -206,6 +210,7 @@ You must speak the same language as the user's question (usually Vietnamese)."""
             for content in output_message.get("content", []):
                 if "toolUse" in content:
                     tool_requests.append(content["toolUse"])
+                    tools_called.append(content["toolUse"]["name"])
 
             if not tool_requests:
                 # AI không gọi thêm tool nào nữa -> Trả về câu trả lời cuối cùng
@@ -213,7 +218,10 @@ You must speak the same language as the user's question (usually Vietnamese)."""
                 for content in output_message.get("content", []):
                     if "text" in content:
                         text_content += content["text"]
-                return text_content if text_content else "Tôi đã xử lý yêu cầu của bạn thành công."
+                return {
+                    "answer": text_content if text_content else "Tôi đã xử lý yêu cầu của bạn thành công.",
+                    "steps": tools_called
+                }
 
             # Thực thi các Tool được yêu cầu
             tool_results = []
@@ -286,7 +294,10 @@ You must speak the same language as the user's question (usually Vietnamese)."""
                 "content": tool_results
             })
 
-        return "AI Coach bị quá tải ngữ cảnh do thực hiện quá nhiều bước suy luận liên tiếp."
+        return {
+            "answer": "AI Coach bị quá tải ngữ cảnh do thực hiện quá nhiều bước suy luận liên tiếp.",
+            "steps": tools_called
+        }
 
 
 class LocalAI:
@@ -319,8 +330,11 @@ class LocalAI:
             pass
         return {"category": "Other", "confidence": 0.1}
 
-    def chat(self, user_id: str, question: str) -> str:
-        return "Xin lỗi, AI Coach đang chạy ở chế độ Offline (LocalAI). Vui lòng cấu hình Bedrock để trò chuyện thực tế."
+    def chat(self, user_id: str, question: str) -> dict:
+        return {
+            "answer": "Xin lỗi, AI Coach đang chạy ở chế độ Offline (LocalAI). Vui lòng cấu hình Bedrock để trò chuyện thực tế.",
+            "steps": []
+        }
 
 
 class OllamaAI:
@@ -352,7 +366,7 @@ class OllamaAI:
             print(f"Ollama Error: {e}")
             return {"category": "Other", "confidence": 0.0}
 
-    def chat(self, user_id: str, question: str) -> str:
+    def chat(self, user_id: str, question: str) -> dict:
         prompt = f"""You are a helpful and intelligent AI Money Coach. Answer the user's question.
 User ID: {user_id}
 Question: {question}
@@ -365,6 +379,12 @@ Answer:"""
         try:
             resp = self.client.post(f"{self.url}/api/generate", json=payload)
             resp.raise_for_status()
-            return resp.json().get("response", "Không nhận được phản hồi từ Ollama.")
+            return {
+                "answer": resp.json().get("response", "Không nhận được phản hồi từ Ollama."),
+                "steps": []
+            }
         except Exception as e:
-            return f"Ollama Chat Error: {str(e)}"
+            return {
+                "answer": f"Ollama Chat Error: {str(e)}",
+                "steps": []
+            }
