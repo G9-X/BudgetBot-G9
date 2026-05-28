@@ -1,11 +1,11 @@
 import { test, expect } from '@playwright/test';
 
 test('Cognito Login Test on Custom UI', async ({ page }) => {
-  // Go to the local app domain
-  await page.goto('http://localhost:3001/');
+  // Go to the deployed app domain
+  await page.goto('https://app.group9.id.vn/');
 
   // Click the "Sign in" or "Đăng nhập" link on the landing page
-  const headerSignInLink = page.locator('a[href="/auth/sign-in"]').first();
+  const headerSignInLink = page.locator('text=/Đăng nhập|Sign in/').first();
   await headerSignInLink.click();
 
   // Wait for client side routing to the sign-in page
