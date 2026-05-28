@@ -198,3 +198,116 @@ def _aggregate(rows: list) -> dict:
         agg[cat]["total"] += float(r.get("amount", 0))
         agg[cat]["count"] += 1
     return {k: v for k, v in agg.items()}
+
+class MySQLUserStore:
+    def __init__(self, url: str):
+        try:
+            import pymysql
+            import pymysql.cursors
+        except ImportError:
+            raise ImportError("pymysql not installed. Run: pip install pymysql cryptography")
+        if not url:
+            raise ValueError("USERSTORE_MYSQL_URL must be set")
+        
+        # Parse URL: mysql+pymysql://user:pass@host:port/db
+        import re
+        m = re.match(r"mysql\+pymysql://([^:]+):([^@]+)@([^:/]+)(?::(\d+))?/([^?]+)", url)
+        if not m:
+            raise ValueError("Invalid MySQL URL format")
+        user, password, host, port, db = m.groups()
+        port = int(port) if port else 3306
+
+        self.conn = pymysql.connect(
+            host=host,
+            user=user,
+            password=password,
+            database=db,
+            port=port,
+            cursorclass=pymysql.cursors.DictCursor,
+            autocommit=True
+        )
+        self._init_schema()
+
+    def _init_schema(self):
+        with self.conn.cursor() as cur:
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS transactions (
+                    id VARCHAR(255) PRIMARY KEY,
+                    import_id VARCHAR(255),
+                    user_id VARCHAR(255) NOT NULL,
+                    txn_date DATE NOT NULL,
+                    description TEXT,
+                    merchant TEXT,
+                    amount DECIMAL(14,2),
+                    category VARCHAR(255),
+                    confidence DECIMAL(4,2),
+                    status VARCHAR(50),
+                    recurring BOOLEAN DEFAULT FALSE,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            try:
+                cur.execute("CREATE INDEX txn_user_date_idx ON transactions(user_id, txn_date) KEY_BLOCK_SIZE=0;")
+            except Exception:
+                pass
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS rules (
+                    id VARCHAR(255) PRIMARY KEY,
+                    user_id VARCHAR(255) NOT NULL,
+                    contains TEXT,
+                    category VARCHAR(255),
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+
+    def add_transaction(self, user_id: str, txn: dict) -> None:
+        with self.conn.cursor() as cur:
+            cur.execute(
+                "INSERT INTO transactions (id, import_id, user_id, txn_date, description, merchant, amount, category, confidence, status, recurring) "
+                "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                (txn["id"], txn["importId"], user_id, txn["date"], txn["description"], txn["merchant"], float(txn["amount"]), txn["category"], float(txn["confidence"]), txn["status"], 1 if txn.get("recurring") else 0),
+            )
+
+    def update_transaction(self, user_id: str, txn_id: str, updates: dict) -> None:
+        if not updates: return
+        set_clause = ", ".join([f"{k} = %s" for k in updates.keys()])
+        values = list(updates.values()) + [user_id, txn_id]
+        with self.conn.cursor() as cur:
+            cur.execute(f"UPDATE transactions SET {set_clause} WHERE user_id = %s AND id = %s", values)
+
+    def list_transactions(self, user_id: str, month: str | None = None) -> list:
+        sql = "SELECT id, import_id as importId, DATE_FORMAT(txn_date, '%Y-%m-%d') as date, description, merchant, amount, category, confidence, status, recurring FROM transactions WHERE user_id = %s"
+        params = [user_id]
+        if month:
+            sql += " AND DATE_FORMAT(txn_date, '%Y-%m') = %s"
+            params.append(month)
+        sql += " ORDER BY txn_date DESC"
+        with self.conn.cursor() as cur:
+            cur.execute(sql, params)
+            res = []
+            for r in cur.fetchall():
+                d = dict(r)
+                d["amount"] = float(d["amount"]) if d["amount"] is not None else 0.0
+                d["confidence"] = float(d["confidence"]) if d["confidence"] is not None else 0.0
+                d["recurring"] = bool(d["recurring"])
+                res.append(d)
+            return res
+
+    def add_rule(self, user_id: str, rule: dict) -> None:
+        with self.conn.cursor() as cur:
+            cur.execute(
+                "INSERT INTO rules (id, user_id, contains, category) VALUES (%s, %s, %s, %s)",
+                (rule["id"], user_id, rule["contains"], rule["category"])
+            )
+
+    def list_rules(self, user_id: str) -> list:
+        with self.conn.cursor() as cur:
+            cur.execute("SELECT id, contains, category FROM rules WHERE user_id = %s", (user_id,))
+            return list(cur.fetchall())
+
+    def clear_transactions(self, user_id: str) -> None:
+        with self.conn.cursor() as cur:
+            cur.execute("DELETE FROM transactions WHERE user_id = %s", (user_id,))
+
+    def summary(self, user_id: str, month: str | None = None) -> dict:
+        return _aggregate(self.list_transactions(user_id, month))
