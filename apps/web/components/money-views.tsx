@@ -663,7 +663,7 @@ function StatCard({
     <Card>
       <CardHeader>
         <CardDescription>{label}</CardDescription>
-        <CardTitle className="text-2xl font-semibold tabular-nums">
+        <CardTitle title={value} className="text-2xl font-semibold tabular-nums truncate">
           {value}
         </CardTitle>
       </CardHeader>
