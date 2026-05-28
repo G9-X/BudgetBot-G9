@@ -32,7 +32,7 @@ interface MoneyCoachContextValue {
 const storageKey = "money-coach-demo-state-v1"
 const sessionKey = "money-coach-demo-session-v1"
 const localeKey = "money-coach-locale-v1"
-const API_BASE_URL = "http://127.0.0.1:8000"
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"
 const USER_ID = "demo-user"
 
 /** Safely coerce any API shape to a plain array of transactions */
