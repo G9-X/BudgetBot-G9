@@ -58,6 +58,7 @@ def handle_upload(
 
     rules = userstore.list_rules(user_id)
     
+    txns = []
     for i, row in enumerate(rows):
         desc = row["description"]
         desc_lower = desc.lower()
@@ -101,12 +102,16 @@ def handle_upload(
             "recurring": recurring
         }
         userstore.add_transaction(user_id, txn)
+        txns.append(txn)
 
     return {
         "id": import_id,
         "filename": filename,
         "importedAt": _now(),
         "rows": len(rows),
+        "rows_parsed": len(rows),
+        "rows_inserted": len(rows),
+        "sample_categorized": txns,
         "ruleMatches": rules_applied,
         "aiCalls": ai_calls,
         "reviewsNeeded": reviews_needed,
@@ -136,12 +141,19 @@ def handle_summary(user_id: str, month: Optional[str], userstore) -> dict:
             by_cat.append({"category": cat, "amount": data["amount"], "count": data["count"]})
     by_cat.sort(key=lambda x: x["amount"], reverse=True)
 
+    resolved_month = month or _now()[:7]
+    top_3 = by_cat[:3]
+    by_category_dict = {cat: {"amount": data["amount"], "count": data["count"]} for cat, data in cats.items()}
+
     return {
         "income": income,
         "spend": spend,
         "net": income - spend,
         "reviewCount": sum(1 for t in txns if t["status"] == "NEEDS_REVIEW"),
-        "byCategory": by_cat
+        "byCategory": by_cat,
+        "by_category": by_category_dict,
+        "top_3_drivers": top_3,
+        "month": resolved_month
     }
 
 def handle_list_transactions(user_id: str, month: Optional[str], userstore) -> list:

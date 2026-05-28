@@ -68,7 +68,11 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname()
   const router = useRouter()
   const { locale, signOut, state } = useMoneyCoach()
-  const pending = state.transactions.filter(
+  const txList = Array.isArray(state.transactions)
+    ? state.transactions
+    : (state.transactions as unknown as { transactions?: unknown[] })
+        ?.transactions ?? []
+  const pending = (txList as { status?: string }[]).filter(
     (transaction) => transaction.status === "NEEDS_REVIEW"
   ).length
 

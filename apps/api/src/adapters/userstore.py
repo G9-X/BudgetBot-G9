@@ -98,6 +98,10 @@ class PostgresUserStore:
             cur.execute("SELECT id, contains, category FROM rules WHERE user_id = %s", (user_id,))
             return [{"id": r[0], "contains": r[1], "category": r[2]} for r in cur.fetchall()]
 
+    def clear_transactions(self, user_id: str) -> None:
+        with self.conn.cursor() as cur:
+            cur.execute("DELETE FROM transactions WHERE user_id = %s", (user_id,))
+
     def summary(self, user_id: str, month: str | None = None) -> dict:
         return _aggregate(self.list_transactions(user_id, month))
 
@@ -178,6 +182,10 @@ class SQLiteUserStore:
     def list_rules(self, user_id: str) -> list:
         cur = self.conn.execute("SELECT id, contains, category FROM rules WHERE user_id = ?", (user_id,))
         return [dict(r) for r in cur.fetchall()]
+
+    def clear_transactions(self, user_id: str) -> None:
+        self.conn.execute("DELETE FROM transactions WHERE user_id = ?", (user_id,))
+        self.conn.commit()
 
     def summary(self, user_id: str, month: str | None = None) -> dict:
         return _aggregate(self.list_transactions(user_id, month))

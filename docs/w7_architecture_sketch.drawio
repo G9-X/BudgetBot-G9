@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="Electron" modified="2026-05-28T09:30:00.000Z" agent="Mozilla/5.0" version="21.0.0">
+  <diagram id="w7_architecture" name="W7 AI Money Coach Architecture">
+    <mxGraphModel dx="1200" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" background="#ffffff" math="0" shadow="0">
+      <root>
+        <!-- Layer Root Cells -->
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- AWS Cloud Boundary Group -->
+        <mxCell id="aws_cloud" value="AWS Cloud Boundary" style="rounded=1;arcSize=5;dashPattern=5 5;dashed=1;fillColor=#F8F9FA;strokeColor=#FF9900;strokeWidth=2;align=left;verticalAlign=top;spacingLeft=10;spacingTop=10;fontStyle=1;fontSize=14;fontColor=#232F3E;" vertex="1" parent="1">
+          <mxGeometry x="280" y="40" width="840" height="660" as="geometry" />
+        </mxCell>
+
+        <!-- VPC Boundary Group -->
+        <mxCell id="vpc" value="Amazon VPC (ap-southeast-1)" style="rounded=1;arcSize=5;dashPattern=3 3;dashed=1;fillColor=#F2F8FD;strokeColor=#0073BB;strokeWidth=2;align=left;verticalAlign=top;spacingLeft=10;spacingTop=10;fontStyle=1;fontSize=12;fontColor=#0073BB;" vertex="1" parent="aws_cloud">
+          <mxGeometry x="40" y="80" width="760" height="540" as="geometry" />
+        </mxCell>
+
+        <!-- Public Subnet Group -->
+        <mxCell id="pub_subnet" value="Public Subnet (DMZ)" style="rounded=1;arcSize=5;fillColor=#F4FBF7;strokeColor=#1D8102;strokeWidth=1.5;align=left;verticalAlign=top;spacingLeft=10;spacingTop=10;fontStyle=1;fontColor=#1D8102;" vertex="1" parent="vpc">
+          <mxGeometry x="30" y="60" width="320" height="440" as="geometry" />
+        </mxCell>
+
+        <!-- Private Subnet Group -->
+        <mxCell id="priv_subnet" value="Private Subnet (Application &amp; DB)" style="rounded=1;arcSize=5;fillColor=#FFFAF0;strokeColor=#EC7211;strokeWidth=1.5;align=left;verticalAlign=top;spacingLeft=10;spacingTop=10;fontStyle=1;fontColor=#EC7211;" vertex="1" parent="vpc">
+          <mxGeometry x="390" y="60" width="340" height="440" as="geometry" />
+        </mxCell>
+
+        <!-- Nodes in Edge / Client Boundary (Outside AWS Cloud) -->
+        <mxCell id="client" value="User Browser" style="outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#232F3E;strokeColor=none;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=11;aspect=fixed;shape=mxgraph.aws4.user;" vertex="1" parent="1">
+          <mxGeometry x="50" y="320" width="60" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- S3 Web (Static Hosting) -->
+        <mxCell id="s3_web" value="S3 Static Web&#10;(Frontend)" style="outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#E71512;strokeColor=none;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=11;aspect=fixed;shape=mxgraph.aws4.s3;" vertex="1" parent="1">
+          <mxGeometry x="180" y="100" width="60" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- CloudFront CDN -->
+        <mxCell id="cloudfront" value="Amazon CloudFront" style="outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#8C4FFF;strokeColor=none;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=11;aspect=fixed;shape=mxgraph.aws4.cloudfront;" vertex="1" parent="1">
+          <mxGeometry x="180" y="220" width="60" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- API Gateway -->
+        <mxCell id="apigw" value="Amazon API Gateway" style="outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#8C4FFF;strokeColor=none;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=11;aspect=fixed;shape=mxgraph.aws4.api_gateway;" vertex="1" parent="1">
+          <mxGeometry x="180" y="380" width="60" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- Compute: AWS Lambda (FastAPI App) inside Public Subnet -->
+        <mxCell id="lambda" value="AWS Lambda&#10;(FastAPI App)" style="outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#FF9900;strokeColor=none;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=11;aspect=fixed;shape=mxgraph.aws4.lambda;" vertex="1" parent="pub_subnet">
+          <mxGeometry x="130" y="160" width="60" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- Storage: Amazon S3 (Encrypted Statements) in Private Subnet -->
+        <mxCell id="s3_upload" value="Amazon S3&#10;(CSV Uploads)" style="outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#E71512;strokeColor=none;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=11;aspect=fixed;shape=mxgraph.aws4.s3;" vertex="1" parent="priv_subnet">
+          <mxGeometry x="60" y="60" width="60" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- DB: Amazon RDS (PostgreSQL) in Private Subnet -->
+        <mxCell id="rds" value="Amazon RDS&#10;(PostgreSQL)" style="outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#335828;strokeColor=none;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=11;aspect=fixed;shape=mxgraph.aws4.rds;" vertex="1" parent="priv_subnet">
+          <mxGeometry x="60" y="200" width="60" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- Security: KMS CMK in Private Subnet -->
+        <mxCell id="kms" value="AWS KMS Key&#10;(Custom Managed)" style="outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#7D50B2;strokeColor=none;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=11;aspect=fixed;shape=mxgraph.aws4.kms;" vertex="1" parent="priv_subnet">
+          <mxGeometry x="220" y="60" width="60" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- AI: Amazon Bedrock outside VPC boundary -->
+        <mxCell id="bedrock" value="Amazon Bedrock&#10;(Claude Haiku)" style="outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#8c9ba5;strokeColor=none;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=11;aspect=fixed;shape=mxgraph.aws4.bedrock;" vertex="1" parent="priv_subnet">
+          <mxGeometry x="220" y="200" width="60" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- Observability: Amazon CloudWatch inside public subnet / parent -->
+        <mxCell id="cloudwatch" value="Amazon CloudWatch&#10;(Full Observability)" style="outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#C8511B;strokeColor=none;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=11;aspect=fixed;shape=mxgraph.aws4.cloudwatch;" vertex="1" parent="pub_subnet">
+          <mxGeometry x="130" y="320" width="60" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- Connections (Edges) -->
+        <!-- Browser to CloudFront -->
+        <mxCell id="edge_user_cf" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#0073BB;strokeWidth=1.5;fontColor=#232F3E;fontSize=10;" edge="1" parent="1" source="client" target="cloudfront">
+          <mxGeometry relative="1" as="geometry">
+            <Array points="100,350 100,250 180,250" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- CloudFront to S3 Static Web -->
+        <mxCell id="edge_cf_s3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#8C4FFF;strokeWidth=1.5;fontColor=#232F3E;fontSize=10;" edge="1" parent="1" source="cloudfront" target="s3_web">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Browser to API Gateway -->
+        <mxCell id="edge_user_api" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#0073BB;strokeWidth=1.5;fontColor=#232F3E;fontSize=10;" edge="1" parent="1" source="client" target="apigw">
+          <mxGeometry relative="1" as="geometry">
+            <Array points="100,350 100,410 180,410" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- API Gateway to Lambda -->
+        <mxCell id="edge_api_lambda" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#8C4FFF;strokeWidth=1.5;fontColor=#232F3E;fontSize=10;" edge="1" parent="1" source="apigw" target="lambda">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Lambda to S3 Uploads -->
+        <mxCell id="edge_lambda_s3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#FF9900;strokeWidth=1.5;fontColor=#232F3E;fontSize=10;" edge="1" parent="1" source="lambda" target="s3_upload">
+          <mxGeometry relative="1" as="geometry">
+            <Array points="510,290 510,190 750,190" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Lambda to RDS -->
+        <mxCell id="edge_lambda_rds" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#FF9900;strokeWidth=1.5;fontColor=#232F3E;fontSize=10;" edge="1" parent="1" source="lambda" target="rds">
+          <mxGeometry relative="1" as="geometry">
+            <Array points="510,290 510,330 750,330" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Lambda to Bedrock -->
+        <mxCell id="edge_lambda_bedrock" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#FF9900;strokeWidth=1.5;fontColor=#232F3E;fontSize=10;" edge="1" parent="1" source="lambda" target="bedrock">
+          <mxGeometry relative="1" as="geometry">
+            <Array points="510,290 510,390 910,390" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Lambda to CloudWatch -->
+        <mxCell id="edge_lambda_cw" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#C8511B;strokeWidth=1.5;fontColor=#232F3E;fontSize=10;" edge="1" parent="1" source="lambda" target="cloudwatch">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- KMS Encrypting S3 -->
+        <mxCell id="edge_kms_s3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#7D50B2;strokeWidth=1.5;dashed=1;fontColor=#232F3E;fontSize=10;" edge="1" parent="1" source="kms" target="s3_upload">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- KMS Encrypting RDS -->
+        <mxCell id="edge_kms_rds" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#7D50B2;strokeWidth=1.5;dashed=1;fontColor=#232F3E;fontSize=10;" edge="1" parent="1" source="kms" target="rds">
+          <mxGeometry relative="1" as="geometry">
+            <Array points="970,160 970,300 810,300" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

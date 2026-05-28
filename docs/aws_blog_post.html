@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hành Trình "Lean Product Launch": Đưa AI Money Coach Từ Cục Bộ Lên AWS Với Chi Phí Dưới $30/Tháng | AWS Machine Learning Blog</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --aws-squid-ink: #232f3e;
+      --aws-orange: #ff9900;
+      --aws-orange-hover: #ec7211;
+      --aws-text-color: #16191f;
+      --aws-bg-light: #f2f3f3;
+      --aws-border-color: #eaeded;
+      --aws-blue: #0073bb;
+      --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      color: var(--aws-text-color);
+      line-height: 1.6;
+      background-color: #ffffff;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* AWS Header & Navbar */
+    .aws-global-header {
+      background-color: var(--aws-squid-ink);
+      color: #ffffff;
+      padding: 12px 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      border-bottom: 2px solid var(--aws-orange);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .aws-logo-container {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .aws-logo-text {
+      font-weight: 700;
+      font-size: 1.25rem;
+      letter-spacing: -0.5px;
+    }
+
+    .aws-logo-badge {
+      background-color: var(--aws-orange);
+      color: var(--aws-squid-ink);
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+      text-transform: uppercase;
+    }
+
+    .aws-nav-links {
+      display: flex;
+      gap: 24px;
+      list-style: none;
+      font-size: 0.9rem;
+    }
+
+    .aws-nav-links a {
+      color: #eaeded;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .aws-nav-links a:hover {
+      color: var(--aws-orange);
+    }
+
+    /* Sub-header */
+    .aws-blog-subheader {
+      background-color: #f8f9fa;
+      border-bottom: 1px solid var(--aws-border-color);
+      padding: 16px 32px;
+    }
+
+    .aws-blog-subheader-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .aws-blog-title-link {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--aws-squid-ink);
+      text-decoration: none;
+      letter-spacing: -0.3px;
+    }
+
+    .aws-blog-title-link span {
+      color: var(--aws-orange);
+    }
+
+    /* Main Grid Layout */
+    .blog-main-layout {
+      max-width: 1200px;
+      margin: 40px auto;
+      padding: 0 24px;
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: 48px;
+    }
+
+    @media (max-width: 992px) {
+      .blog-main-layout {
+        grid-template-columns: 1fr;
+        gap: 32px;
+      }
+    }
+
+    /* Left Content Column */
+    .blog-content-col {
+      min-width: 0;
+    }
+
+    .blog-meta {
+      font-size: 0.875rem;
+      color: #687078;
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+
+    .blog-meta-badge {
+      background-color: var(--aws-bg-light);
+      color: var(--aws-squid-ink);
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 0.75rem;
+    }
+
+    .blog-headline {
+      font-size: 2.2rem;
+      font-weight: 700;
+      color: var(--aws-squid-ink);
+      line-height: 1.25;
+      margin-bottom: 20px;
+      letter-spacing: -0.8px;
+    }
+
+    .blog-deck {
+      font-size: 1.15rem;
+      color: #4d5761;
+      line-height: 1.5;
+      margin-bottom: 32px;
+      font-weight: 400;
+      border-left: 3px solid var(--aws-orange);
+      padding-left: 16px;
+    }
+
+    /* Typographic Styles */
+    .post-content h2 {
+      font-size: 1.65rem;
+      color: var(--aws-squid-ink);
+      margin-top: 40px;
+      margin-bottom: 16px;
+      font-weight: 700;
+      letter-spacing: -0.4px;
+      border-bottom: 1px solid var(--aws-border-color);
+      padding-bottom: 8px;
+    }
+
+    .post-content h3 {
+      font-size: 1.25rem;
+      color: var(--aws-squid-ink);
+      margin-top: 28px;
+      margin-bottom: 12px;
+      font-weight: 600;
+    }
+
+    .post-content p {
+      font-size: 1.05rem;
+      color: var(--aws-text-color);
+      margin-bottom: 20px;
+      line-height: 1.7;
+    }
+
+    .post-content ul, .post-content ol {
+      margin-bottom: 24px;
+      padding-left: 24px;
+    }
+
+    .post-content li {
+      margin-bottom: 8px;
+      font-size: 1.05rem;
+    }
+
+    .post-content strong {
+      font-weight: 600;
+      color: var(--aws-squid-ink);
+    }
+
+    /* Embedded Architecture Diagram Container */
+    .architecture-box {
+      background-color: var(--aws-bg-light);
+      border: 1px solid var(--aws-border-color);
+      border-radius: 8px;
+      padding: 24px;
+      margin: 32px 0;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+    }
+
+    .architecture-box-title {
+      font-weight: 700;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      color: var(--aws-squid-ink);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .architecture-svg-wrapper {
+      width: 100%;
+      background: #ffffff;
+      border: 1px solid var(--aws-border-color);
+      border-radius: 6px;
+      padding: 16px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .architecture-caption {
+      font-size: 0.85rem;
+      color: #687078;
+      text-align: center;
+      margin-top: 12px;
+      font-style: italic;
+    }
+
+    /* Callout Card (AWS Alert Style) */
+    .aws-callout {
+      border-left: 4px solid var(--aws-orange);
+      background-color: #fffaf0;
+      padding: 20px;
+      border-radius: 0 8px 8px 0;
+      margin: 28px 0;
+    }
+
+    .aws-callout-title {
+      font-weight: 700;
+      color: var(--aws-squid-ink);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .aws-callout p {
+      margin-bottom: 0;
+      font-size: 1rem;
+    }
+
+    .aws-info-callout {
+      border-left-color: var(--aws-blue);
+      background-color: #f2f8fd;
+    }
+
+    .aws-info-callout .aws-callout-title {
+      color: var(--aws-blue);
+    }
+
+    /* Table Styles */
+    .aws-table-container {
+      overflow-x: auto;
+      margin: 32px 0;
+      border: 1px solid var(--aws-border-color);
+      border-radius: 6px;
+    }
+
+    table.aws-blog-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.95rem;
+    }
+
+    table.aws-blog-table th {
+      background-color: var(--aws-bg-light);
+      color: var(--aws-squid-ink);
+      font-weight: 700;
+      padding: 12px 16px;
+      border-bottom: 2px solid var(--aws-border-color);
+    }
+
+    table.aws-blog-table td {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--aws-border-color);
+      color: var(--aws-text-color);
+    }
+
+    table.aws-blog-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    table.aws-blog-table tr:nth-child(even) {
+      background-color: #fafafa;
+    }
+
+    /* Code Block Styles */
+    .aws-code-container {
+      background-color: var(--aws-squid-ink);
+      border-radius: 6px;
+      padding: 16px;
+      margin: 24px 0;
+      position: relative;
+    }
+
+    .aws-code-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding-bottom: 8px;
+      font-size: 0.8rem;
+      color: #aab2bb;
+    }
+
+    pre.aws-code {
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+      overflow-x: auto;
+      color: #ffffff;
+      line-height: 1.5;
+    }
+
+    .code-comment { color: #8c9ba5; font-style: italic; }
+    .code-keyword { color: #ff9900; font-weight: 600; }
+    .code-string { color: #85eb85; }
+    .code-number { color: #ffc470; }
+
+    /* Right Sidebar Column */
+    .blog-sidebar-col {
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+    }
+
+    .sidebar-widget {
+      border: 1px solid var(--aws-border-color);
+      border-radius: 8px;
+      padding: 24px;
+      background-color: #ffffff;
+    }
+
+    .sidebar-widget-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--aws-orange);
+      margin-bottom: 16px;
+      border-bottom: 2px solid var(--aws-orange);
+      padding-bottom: 6px;
+    }
+
+    .sidebar-resources-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .sidebar-resources-list a {
+      color: var(--aws-blue);
+      text-decoration: none;
+      font-size: 0.95rem;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+
+    .sidebar-resources-list a:hover {
+      color: var(--aws-orange-hover);
+      text-decoration: underline;
+    }
+
+    .sidebar-author-card {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+    }
+
+    .sidebar-author-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background-color: var(--aws-orange);
+      color: var(--aws-squid-ink);
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+    }
+
+    .sidebar-author-info h4 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--aws-squid-ink);
+    }
+
+    .sidebar-author-info p {
+      font-size: 0.8rem;
+      color: #687078;
+    }
+
+    /* Footer */
+    .aws-global-footer {
+      background-color: var(--aws-squid-ink);
+      color: #eaeded;
+      padding: 40px 32px;
+      margin-top: 80px;
+      font-size: 0.85rem;
+      border-top: 4px solid var(--aws-orange);
+    }
+
+    .aws-global-footer-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    .aws-footer-logo {
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: #ffffff;
+    }
+
+    .aws-footer-links {
+      display: flex;
+      gap: 20px;
+      list-style: none;
+    }
+
+    .aws-footer-links a {
+      color: #eaeded;
+      text-decoration: none;
+    }
+
+    .aws-footer-links a:hover {
+      color: var(--aws-orange);
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- AWS Global Header -->
+  <header class="aws-global-header">
+    <div class="aws-logo-container">
+      <div class="aws-logo-text">aws</div>
+      <div class="aws-logo-badge">architecture</div>
+    </div>
+    <ul class="aws-nav-links">
+      <li><a href="#">Sản phẩm</a></li>
+      <li><a href="#">Giải pháp</a></li>
+      <li><a href="#">Bảng giá</a></li>
+      <li><a href="#">Tài liệu kỹ thuật</a></li>
+      <li><a href="#">Đào tạo</a></li>
+    </ul>
+  </header>
+
+  <!-- AWS Blog Subheader -->
+  <div class="aws-blog-subheader">
+    <div class="aws-blog-subheader-container">
+      <a href="#" class="aws-blog-title-link">AWS <span>Architecture Blog</span></a>
+    </div>
+  </div>
+
+  <!-- Main Grid Layout -->
+  <main class="blog-main-layout">
+    
+    <!-- Left Column: Blog Post Content -->
+    <article class="blog-content-col">
+      
+      <!-- Meta Information -->
+      <div class="blog-meta">
+        <span class="blog-meta-badge">Lean Product Launch</span>
+        <span>Đăng ngày 28 tháng 5 năm 2026</span>
+        <span>·</span>
+        <span>Bởi Đội ngũ G9 (FinTech Domain)</span>
+        <span>·</span>
+        <span>Thời gian đọc: 12 phút</span>
+      </div>
+
+      <!-- Headline -->
+      <h1 class="blog-headline">Hành Trình "Lean Product Launch": Đưa AI Money Coach Từ Cục Bộ Lên AWS Với Chi Phí Dưới $30/Tháng</h1>
+
+      <!-- Deck/Summary Paragraph -->
+      <p class="blog-deck">
+        Từ môi trường phát triển cục bộ (Local-first) sử dụng SQLite và Ollama Llama 3.1, Đội G9 đã đưa BudgetBot lên hạ tầng AWS Production thành công chỉ trong 48 giờ. Bằng cách kế thừa các triết lý thiết kế bảo mật tối cao của Morgan Stanley, giải pháp phễu lọc tối ưu ROI của Robinhood, và kiến trúc giám sát giao dịch của Genpact, chúng tôi đã hiện thực hóa một đợt phát hành sản phẩm (Lean Launch) đạt độ bảo mật tối đa và tổng chi phí vận hành đo lường được dưới $30 một tháng.
+      </p>
+
+      <!-- Post Body -->
+      <div class="post-content">
+        <p>
+          Khi phát triển các ứng dụng GenAI trong lĩnh vực tài chính, Thách thức lớn nhất không nằm ở việc viết Prompt mà là bài toán <strong>chuyển đổi hạ tầng (Infrastructure Transition)</strong>. Trong giai đoạn phát triển cục bộ (Local Dev), các kỹ sư thường được tận hưởng nguồn lực miễn phí: cơ sở dữ liệu SQLite in-memory siêu tốc và mô hình AI chạy local thông qua Ollama (Llama 3.1 8B). 
+        </p>
+        <p>
+          Tuy nhiên, khi bước sang giai đoạn phát hành thực tế (Production Launch), việc bê nguyên xi tư duy đó lên đám mây sẽ dẫn tới thảm họa tài chính. Nếu gọi thẳng các API LLM đắt đỏ (như Claude 3.5 Sonnet) cho 100% dòng sao kê ngân hàng và thuê máy chủ GPU liên tục, hóa đơn đám mây sẽ nhanh chóng bóp nghẹt mô hình kinh doanh của một startup tài chính tinh gọn. 
+        </p>
+        <p>
+          Thực tế lịch sử ngành tài chính số đã chứng minh điều này. Các "ông lớn" tại Wall Street như <strong>Goldman Sachs</strong> hay **JPMorgan Chase** với hệ thống bóc tách dữ liệu hợp đồng **COiN (Contract Intelligence)** có thể chi hàng triệu USD cho hạ tầng chuyên biệt. Nhưng đối với các nhóm khởi nghiệp tinh gọn (Lean Startup), chúng ta bắt buộc phải đi theo một lộ trình thực dụng hơn.
+        </p>
+        <p>
+          Trong khuôn khổ Capstone Hackathon W7 với ngân sách **cực kỳ ngặt nghèo (Hard Cap $100)**, <strong>Đội G9</strong> đã triển khai thành công chiến lược **Lean Product Launch** cho ứng dụng **BudgetBot (AI Money Coach)**. Dưới đây là bài học thực tiễn và những số liệu đo lường được từ quá trình dịch chuyển hệ thống từ cục bộ lên AWS Production, học hỏi trực tiếp từ các giải pháp kiến trúc của Robinhood, Morgan Stanley và Genpact.
+        </p>
+
+        <!-- Callout (AWS Alert) -->
+        <div class="aws-callout aws-info-callout">
+          <div class="aws-callout-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+            Chiến Lược Lean Launch: Cắt Giảm Chi Phí Không Phải Là Cắt Bỏ Tính Năng
+          </div>
+          <p>
+            Mục tiêu của chúng tôi không chỉ là giữ hóa đơn dưới hạn mức $100 của hackathon mà phải đạt được cột mốc <strong>dưới $30/tháng (Path H - Cost Bonus)</strong> cho một hệ thống vận hành hoàn chỉnh. Điều này đòi hỏi những quyết định đánh đổi (Trade-offs) cực kỳ khắt khe về mặt kỹ thuật hạ tầng nhưng vẫn bảo đảm trải nghiệm cao cấp cho người dùng cuối.
+          </p>
+        </div>
+
+        <h2>Kiến Trúc Dịch Chuyển Từ Cục Bộ Lên AWS Production</h2>
+        <p>
+          Để đảm bảo tính nhất quán giữa giai đoạn Local-first và Cloud Production, Đội G9 đã thiết kế mã nguồn Backend dưới dạng các **Adapter Pattern** độc lập. Nhờ đó, việc chuyển đổi từ SQLite cục bộ sang AWS RDS PostgreSQL, hay từ Ollama cục bộ sang Amazon Bedrock chỉ mất đúng 1 dòng cấu hình biến môi trường (Environment Variables).
+        </p>
+
+        <div class="aws-table-container">
+          <table class="aws-blog-table">
+            <thead>
+              <tr>
+                <th>Thành phần hệ thống</th>
+                <th>Môi trường Cục bộ (Local Dev)</th>
+                <th>Hạ tầng Cloud (AWS Production)</th>
+                <th>Quyết định Đánh đổi & Đo lường</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>1. Giao diện (Entry)</strong></td>
+                <td>Next.js Local Server (Port 3000)</td>
+                <td>Amazon CloudFront + S3 Static Hosting</td>
+                <td>Giảm 95% chi phí so với container Amplify nhờ cơ chế Serverless Static Distribution.</td>
+              </tr>
+              <tr>
+                <td><strong>2. Tính toán (Compute)</strong></td>
+                <td>FastAPI Python (Port 8000)</td>
+                <td>AWS Lambda / AWS App Runner (Port 80)</td>
+                <td>Không chịu chi phí máy chủ chạy ngầm lúc nhàn rỗi. Khởi động lạnh <300ms.</td>
+              </tr>
+              <tr>
+                <td><strong>3. Cơ sở dữ liệu (Persistence)</strong></td>
+                <td>SQLite file cục bộ</td>
+                <td>Amazon RDS PostgreSQL (db.t4g.micro)</td>
+                <td>Cô lập hoàn toàn trong Subnet riêng tư (Private Subnet), không mở Public Access để đảm bảo bảo mật.</td>
+              </tr>
+              <tr>
+                <td><strong>4. Trí tuệ nhân tạo (AI Engine)</strong></td>
+                <td>Ollama (Mô hình Llama 3.1 8B local)</td>
+                <td>Amazon Bedrock (Claude 3.5 Haiku)</td>
+                <td>Thay thế GPU vật lý bằng serverless Bedrock API. Trả tiền chính xác theo số lượng token tiêu thụ thực tế.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- SVG Architecture Diagram Widget -->
+        <div class="architecture-box">
+          <div class="architecture-box-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+            Bản Đồ Phân Phối Dữ Liệu AWS Lean Launch
+          </div>
+          <div class="architecture-svg-wrapper">
+            <svg width="720" height="340" viewBox="0 0 720 340" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                  <path d="M 0 0 L 10 5 L 0 10 z" fill="#8c9ba5" />
+                </marker>
+              </defs>
+
+              <rect width="100%" height="100%" fill="#ffffff" />
+              
+              <text x="20" y="30" font-family="'Inter', sans-serif" font-size="11" font-weight="700" fill="#687078" letter-spacing="1">CỔNG TIẾP CẬN TĨNH (EDGE)</text>
+              <text x="280" y="30" font-family="'Inter', sans-serif" font-size="11" font-weight="700" fill="#687078" letter-spacing="1">MẠNG VPC AN TOÀN (VPC ISOLATED)</text>
+              <text x="540" y="30" font-family="'Inter', sans-serif" font-size="11" font-weight="700" fill="#687078" letter-spacing="1">TẦNG DỮ LIỆU & AI</text>
+
+              <line x1="250" y1="20" x2="250" y2="320" stroke="#eaeded" stroke-width="1" stroke-dasharray="4,4" />
+              <line x1="510" y1="20" x2="510" y2="320" stroke="#eaeded" stroke-width="1" stroke-dasharray="4,4" />
+
+              <!-- Box 1: S3 + CloudFront (Static Web) -->
+              <rect x="30" y="60" width="180" height="70" rx="6" fill="#f2f8fd" stroke="#0073bb" stroke-width="1.5" />
+              <text x="40" y="85" font-family="'Inter', sans-serif" font-size="13" font-weight="700" fill="#232f3e">CloudFront CDN</text>
+              <text x="40" y="105" font-family="'Inter', sans-serif" font-size="11" fill="#4d5761">Frontend Static HTTPS</text>
+              <rect x="40" y="115" width="85" height="12" rx="2" fill="#0073bb" />
+              <text x="45" y="124" font-family="'Inter', sans-serif" font-size="8" font-weight="700" fill="#ffffff">MANDATORY #1</text>
+
+              <!-- Box 2: User Action -->
+              <rect x="30" y="190" width="180" height="70" rx="6" fill="#f2f8fd" stroke="#0073bb" stroke-width="1.5" />
+              <text x="40" y="215" font-family="'Inter', sans-serif" font-size="13" font-weight="700" fill="#232f3e">Người dùng (Browser)</text>
+              <text x="40" y="235" font-family="'Inter', sans-serif" font-size="11" fill="#4d5761">Tải file sao kê CSV</text>
+              <rect x="40" y="243" width="70" height="12" rx="2" fill="#687078" />
+              <text x="45" y="252" font-family="'Inter', sans-serif" font-size="8" font-weight="700" fill="#ffffff">TRÌNH DUYỆT</text>
+
+              <!-- Box 3: Application Compute -->
+              <rect x="280" y="120" width="200" height="110" rx="6" fill="#fffcf5" stroke="#ff9900" stroke-width="2" />
+              <text x="290" y="145" font-family="'Inter', sans-serif" font-size="14" font-weight="700" fill="#232f3e">FastAPI Compute</text>
+              <text x="290" y="165" font-family="'Inter', sans-serif" font-size="11" fill="#4d5761">Subnet Công Cộng (VPC)</text>
+              <text x="290" y="185" font-family="'Inter', sans-serif" font-size="11" font-weight="600" fill="#ff9900">Regex ➔ AWS Bedrock</text>
+              <rect x="290" y="205" width="85" height="12" rx="2" fill="#ff9900" />
+              <text x="295" y="214" font-family="'Inter', sans-serif" font-size="8" font-weight="700" fill="#ffffff">MANDATORY #2</text>
+
+              <!-- Box 4: S3 Encrypted -->
+              <rect x="540" y="50" width="150" height="60" rx="6" fill="#f4fbf7" stroke="#1d8102" stroke-width="1.5" />
+              <text x="550" y="72" font-family="'Inter', sans-serif" font-size="13" font-weight="700" fill="#232f3e">S3 (KMS Encrypted)</text>
+              <text x="550" y="90" font-family="'Inter', sans-serif" font-size="11" fill="#4d5761">Lưu trữ CSV gốc (#5)</text>
+
+              <!-- Box 5: Database -->
+              <rect x="540" y="145" width="150" height="70" rx="6" fill="#f4fbf7" stroke="#1d8102" stroke-width="2" />
+              <text x="550" y="170" font-family="'Inter', sans-serif" font-size="13" font-weight="700" fill="#232f3e">RDS PostgreSQL</text>
+              <text x="550" y="190" font-family="'Inter', sans-serif" font-size="11" fill="#4d5761">Subnet Riêng Tư (#4 / #6)</text>
+
+              <!-- Box 6: Bedrock Claude -->
+              <rect x="540" y="245" width="150" height="65" rx="6" fill="#fcf6ff" stroke="#a155e0" stroke-width="1.5" />
+              <text x="550" y="270" font-family="'Inter', sans-serif" font-size="13" font-weight="700" fill="#232f3e">Bedrock API</text>
+              <text x="550" y="290" font-family="'Inter', sans-serif" font-size="11" fill="#4d5761">Claude Haiku (#3)</text>
+
+              <!-- Flow Connectors -->
+              <path d="M 120 130 L 120 190" stroke="#8c9ba5" stroke-width="1.5" marker-end="url(#arrow)" />
+              <path d="M 210 225 L 280 185" stroke="#0073bb" stroke-width="2" stroke-dasharray="2,2" marker-end="url(#arrow)" />
+              <path d="M 430 120 L 540 85" stroke="#8c9ba5" stroke-width="1.5" marker-end="url(#arrow)" />
+              <path d="M 480 175 L 540 175" stroke="#1d8102" stroke-width="2" marker-end="url(#arrow)" />
+              <path d="M 430 230 L 540 265" stroke="#a155e0" stroke-width="2" marker-end="url(#arrow)" />
+            </svg>
+          </div>
+          <p class="architecture-caption">Hình 1: Cấu trúc phân phối dữ liệu an toàn của BudgetBot. Sơ đồ mô tả rõ nét ranh giới cô lập mạng (Network Isolation) bảo vệ dữ liệu nhạy cảm của người dùng cuối.</p>
+        </div>
+
+        <h2>Bài Học Kiến Trúc Từ Các Case Study Thực Tế (Sơ đồ Đối sánh)</h2>
+        <p>
+          Để xây dựng một sản phẩm tài chính AI đạt cấp độ sản xuất (Production-grade), Đội G9 đã nghiên cứu kỹ lưỡng các bài viết kỹ thuật và kiến trúc của các hệ thống hàng đầu thế giới được công bố tại các kỳ AWS re:Invent. Chúng tôi đã mô phỏng lại các mô hình thành công này thông qua ba sơ đồ đối sánh dưới đây:
+        </p>
+
+        <!-- Callout link to Draw.io file -->
+        <div class="aws-callout aws-info-callout">
+          <div class="aws-callout-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle;"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+            Tải Lên Thiết Kế Hạ Tầng Hoàn Thiện (Draw.io AWS Diagram)
+          </div>
+          <p>
+            Chúng tôi đã thiết kế và vẽ hoàn chỉnh sơ đồ 7 Năng lực bắt buộc trên phần mềm Draw.io chuyên dụng, sử dụng bộ AWS Icons chính hãng của năm 2026. Sơ đồ này mô tả chi tiết từ cấu hình VPC, định tuyến NAT, các Subnet, liên kết KMS Keys đến luồng dữ liệu Lambda.
+          </p>
+          <p style="margin-top: 10px; font-weight: 700;">
+            👉 Mở trực tiếp tệp tin tại đây: <a href="file:///home/dinh/Downloads/botui/docs/w7_architecture_sketch.drawio" style="color: var(--aws-blue); text-decoration: underline;">docs/w7_architecture_sketch.drawio</a> (Bạn có thể kéo thả tệp này vào trang <a href="https://app.diagrams.net/" target="_blank" style="color: var(--aws-blue); text-decoration: underline;">draw.io</a> để sửa đổi).
+          </p>
+        </div>
+
+        <!-- 1. Robinhood SVG Diagram -->
+        <div class="architecture-box">
+          <div class="architecture-box-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+            Sơ đồ 1: Mô hình Phễu Lọc &amp; LLM Gateway của Robinhood (re:Invent 2024 FSI317)
+          </div>
+          <div class="architecture-svg-wrapper">
+            <svg width="680" height="210" viewBox="0 0 680 210" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="small_arrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+                  <path d="M 0 0 L 10 5 L 0 10 z" fill="#8c9ba5" />
+                </marker>
+              </defs>
+              <rect width="100%" height="100%" fill="#ffffff" />
+              
+              <!-- Boundary: Robinhood Private VPC -->
+              <rect x="130" y="10" width="530" height="190" rx="6" fill="#f4fbf7" stroke="#1d8102" stroke-width="1.5" stroke-dasharray="3,3" />
+              <text x="140" y="25" font-family="'Inter', sans-serif" font-size="9" font-weight="700" fill="#1d8102">ROBINHOOD PRIVATE VPC BOUNDARY</text>
+
+              <!-- Node: Input -->
+              <rect x="15" y="70" width="100" height="50" rx="4" fill="#f2f3f3" stroke="#b4b4bb" stroke-width="1.5" />
+              <text x="25" y="92" font-family="'Inter', sans-serif" font-size="10" font-weight="700" fill="#232f3e">Transaction Stream</text>
+              <text x="25" y="105" font-family="'Inter', sans-serif" font-size="8" fill="#687078">(Mô tả thô)</text>
+
+              <!-- Gateway: LLM Gateway box -->
+              <rect x="145" y="45" width="220" height="140" rx="6" fill="#f2f8fd" stroke="#0073bb" stroke-width="1.5" />
+              <text x="155" y="62" font-family="'Inter', sans-serif" font-size="11" font-weight="700" fill="#0073bb">Robinhood "Cortex" LLM Gateway</text>
+
+              <!-- presidio -->
+              <rect x="155" y="75" width="200" height="30" rx="3" fill="#ffffff" stroke="#eaeded" stroke-width="1" />
+              <text x="162" y="93" font-family="'Inter', sans-serif" font-size="9" fill="#232f3e">1. Presidio API (Ẩn danh PII)</text>
+
+              <!-- Dynamic router -->
+              <rect x="155" y="110" width="200" height="30" rx="3" fill="#ffffff" stroke="#eaeded" stroke-width="1" />
+              <text x="162" y="128" font-family="'Inter', sans-serif" font-size="9" fill="#232f3e">2. Dynamic Router (Chọn mô hình)</text>
+
+              <!-- Cross region -->
+              <rect x="155" y="145" width="200" height="32" rx="3" fill="#ffffff" stroke="#eaeded" stroke-width="1" />
+              <text x="162" y="160" font-family="'Inter', sans-serif" font-size="9" fill="#232f3e">3. Cross-Region Routing</text>
+              <text x="162" y="172" font-family="'Inter', sans-serif" font-size="8" font-weight="700" fill="#1d8102">(SG / Tokyo / Oregon)</text>
+
+              <!-- Bedrock Primary -->
+              <rect x="390" y="45" width="120" height="60" rx="4" fill="#fcf6ff" stroke="#a155e0" stroke-width="1.5" />
+              <text x="398" y="65" font-family="'Inter', sans-serif" font-size="10" font-weight="700" fill="#232f3e">Bedrock Primary</text>
+              <text x="398" y="80" font-family="'Inter', sans-serif" font-size="8" fill="#687078">(Claude Haiku)</text>
+              <text x="398" y="95" font-family="'Inter', sans-serif" font-size="8" font-weight="700" fill="#a155e0">Provisioned Throughput</text>
+
+              <!-- Bedrock Fallback -->
+              <rect x="390" y="125" width="120" height="60" rx="4" fill="#fff5f5" stroke="#db0000" stroke-width="1.5" />
+              <text x="398" y="145" font-family="'Inter', sans-serif" font-size="10" font-weight="700" fill="#db0000">Bedrock Fallback</text>
+              <text x="398" y="160" font-family="'Inter', sans-serif" font-size="8" fill="#687078">(Claude Sonnet)</text>
+              <text x="398" y="175" font-family="'Inter', sans-serif" font-size="8" font-weight="700" fill="#db0000">Khi quá tải (Rate limit)</text>
+
+              <!-- User Review -->
+              <rect x="540" y="80" width="110" height="50" rx="4" fill="#fffbf5" stroke="#ff9900" stroke-width="1.5" />
+              <text x="548" y="100" font-family="'Inter', sans-serif" font-size="10" font-weight="700" fill="#ff9900">Review Queue</text>
+              <text x="548" y="115" font-family="'Inter', sans-serif" font-size="8" fill="#687078">(Human-in-the-loop)</text>
+
+              <!-- Arrows -->
+              <path d="M 115 95 L 145 95" stroke="#8c9ba5" stroke-width="1.5" marker-end="url(#small_arrow)" />
+              <path d="M 365 95 L 390 75" stroke="#0073bb" stroke-width="1.5" marker-end="url(#small_arrow)" />
+              <path d="M 365 130 L 390 145" stroke="#0073bb" stroke-width="1.5" marker-end="url(#small_arrow)" />
+              <path d="M 510 75 L 540 95" stroke="#8c9ba5" stroke-width="1.5" marker-end="url(#small_arrow)" />
+              <path d="M 510 155 L 540 120" stroke="#8c9ba5" stroke-width="1.5" marker-end="url(#small_arrow)" />
+            </svg>
+          </div>
+          <p class="architecture-caption">Kiến trúc 1: Phễu lọc tối ưu và an toàn LLM Gateway của Robinhood (re:Invent 2024). Tích hợp Presidio ẩn danh PII, định tuyến vùng chéo (Cross-Region) và cơ chế tự động chuyển vùng dự phòng (Fallback) khi Bedrock bị quá tải.</p>
+        </div>
+
+        <!-- 2. Morgan Stanley SVG Diagram -->
+        <div class="architecture-box">
+          <div class="architecture-box-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+            Sơ đồ 2: Bảo Mật Dữ Liệu Chủ Quyền &amp; RAG của Morgan Stanley
+          </div>
+          <div class="architecture-svg-wrapper">
+            <svg width="680" height="210" viewBox="0 0 680 210" xmlns="http://www.w3.org/2000/svg">
+              <rect width="100%" height="100%" fill="#ffffff" />
+              
+              <!-- VPC boundary -->
+              <rect x="150" y="10" width="510" height="190" rx="6" fill="#f2f8fd" stroke="#0073bb" stroke-width="1.5" stroke-dasharray="3,3" />
+              <text x="160" y="25" font-family="'Inter', sans-serif" font-size="9" font-weight="700" fill="#0073bb">MORGAN STANLEY SECURE VPC BOUNDARY</text>
+
+              <!-- Advisor Client -->
+              <rect x="15" y="75" width="110" height="60" rx="4" fill="#f2f3f3" stroke="#687078" stroke-width="1.5" />
+              <text x="25" y="100" font-family="'Inter', sans-serif" font-size="10" font-weight="700" fill="#232f3e">Wealth Advisor</text>
+              <text x="25" y="115" font-family="'Inter', sans-serif" font-size="8" fill="#687078">HTTPS Client Portal</text>
+
+              <!-- ECS compute inside VPC -->
+              <rect x="165" y="45" width="130" height="140" rx="4" fill="#fffcf5" stroke="#ff9900" stroke-width="1.5" />
+              <text x="175" y="65" font-family="'Inter', sans-serif" font-size="11" font-weight="700" fill="#232f3e">ECS App Cluster</text>
+              <text x="175" y="80" font-family="'Inter', sans-serif" font-size="8" fill="#687078">Tầng RAG &amp; Điều Phối</text>
+
+              <!-- OpenSearch Serverless Vector DB inside VPC private -->
+              <rect x="320" y="45" width="170" height="65" rx="4" fill="#f4fbf7" stroke="#1d8102" stroke-width="1.5" />
+              <text x="330" y="65" font-family="'Inter', sans-serif" font-size="10" font-weight="700" fill="#1d8102">Amazon OpenSearch</text>
+              <text x="330" y="80" font-family="'Inter', sans-serif" font-size="8" fill="#232f3e">Serverless Vector DB (KMS)</text>
+              <text x="330" y="95" font-family="'Inter', sans-serif" font-size="8" font-weight="700" fill="#1d8102">100k+ Research Papers</text>
+
+              <!-- KMS Key with Auto Rotation -->
+              <rect x="320" y="120" width="170" height="65" rx="4" fill="#fcf6ff" stroke="#7d50b2" stroke-width="1.5" />
+              <text x="330" y="140" font-family="'Inter', sans-serif" font-size="10" font-weight="700" fill="#7d50b2">AWS KMS Key (CMK)</text>
+              <text x="330" y="155" font-family="'Inter', sans-serif" font-size="8" fill="#232f3e">Tự động xoay vòng khóa hàng năm</text>
+              <text x="330" y="170" font-family="'Inter', sans-serif" font-size="8" font-weight="700" fill="#7d50b2">Mã hóa lớp ứng dụng &amp; DB</text>
+
+              <!-- PrivateLink to Bedrock -->
+              <rect x="510" y="70" width="130" height="70" rx="4" fill="#f8f9fa" stroke="#b4b4bb" stroke-width="1.5" />
+              <text x="518" y="90" font-family="'Inter', sans-serif" font-size="10" font-weight="700" fill="#232f3e">Bedrock API</text>
+              <text x="518" y="105" font-family="'Inter', sans-serif" font-size="8" fill="#687078">(VPC PrivateLink)</text>
+              <text x="518" y="120" font-family="'Inter', sans-serif" font-size="8" font-weight="700" fill="#1d8102">Dữ liệu cô lập 100%</text>
+
+              <!-- Arrows -->
+              <path d="M 125 105 L 165 105" stroke="#0073bb" stroke-width="2" marker-end="url(#small_arrow)" />
+              <path d="M 295 80 L 320 80" stroke="#ff9900" stroke-width="1.5" marker-end="url(#small_arrow)" />
+              <path d="M 295 140 L 320 140" stroke="#ff9900" stroke-width="1.5" marker-end="url(#small_arrow)" />
+              <path d="M 490 85 L 510 95" stroke="#8c9ba5" stroke-width="1.5" marker-end="url(#small_arrow)" />
+              <path d="M 490 150 L 510 120" stroke="#7d50b2" stroke-width="1.5" stroke-dasharray="2,2" />
+            </svg>
+          </div>
+          <p class="architecture-caption">Hình 2: Mô hình RAG và bảo mật chủ quyền dữ liệu dựa trên tiêu chuẩn Morgan Stanley. Toàn bộ tài liệu nghiên cứu được chuyển đổi thành vector nhúng thông qua Titan Embeddings v2 lưu trữ ở OpenSearch Serverless, bảo vệ tuyệt đối bằng khóa tự xoay vòng KMS và gọi Bedrock Claude Sonnet qua VPC PrivateLink.</p>
+        </div>
+
+        <!-- 3. Genpact SVG Diagram -->
+        <div class="architecture-box">
+          <div class="architecture-box-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+            Sơ đồ 3: Hệ Thống Giám Sát Tuân Thủ &amp; Bảo Vệ (Guardrails) của Genpact riskCanvas
+          </div>
+          <div class="architecture-svg-wrapper">
+            <svg width="680" height="210" viewBox="0 0 680 210" xmlns="http://www.w3.org/2000/svg">
+              <rect width="100%" height="100%" fill="#ffffff" />
+              
+              <!-- Boundary: private subnet -->
+              <rect x="150" y="10" width="515" height="190" rx="6" fill="#fffdf5" stroke="#ff9900" stroke-width="1.5" stroke-dasharray="3,3" />
+              <text x="160" y="25" font-family="'Inter', sans-serif" font-size="9" font-weight="700" fill="#ff9900">APPLICATION PRIVATE SUBNET</text>
+
+              <!-- Transaction stream -->
+              <rect x="15" y="75" width="110" height="60" rx="4" fill="#f2f3f3" stroke="#b4b4bb" stroke-width="1.5" />
+              <text x="25" y="100" font-family="'Inter', sans-serif" font-size="10" font-weight="700" fill="#232f3e">Transaction Log</text>
+              <text x="25" y="115" font-family="'Inter', sans-serif" font-size="8" fill="#687078">(Real-time ingestion)</text>
+
+              <!-- AWS Lambda screener -->
+              <rect x="170" y="55" width="130" height="100" rx="4" fill="#fff5f0" stroke="#c8511b" stroke-width="1.5" />
+              <text x="180" y="75" font-family="'Inter', sans-serif" font-size="11" font-weight="700" fill="#c8511b">Lambda Screener</text>
+              <text x="180" y="95" font-family="'Inter', sans-serif" font-size="8" fill="#232f3e">Tính điểm tự tin</text>
+              <text x="180" y="110" font-family="'Inter', sans-serif" font-size="8" fill="#232f3e">Gửi chỉ số CloudWatch</text>
+              <text x="180" y="130" font-family="'Inter', sans-serif" font-size="9" font-weight="700" fill="#1d8102">Rule Match rate</text>
+
+              <!-- Bedrock Guardrails Content Filter -->
+              <rect x="330" y="45" width="160" height="65" rx="4" fill="#fcf6ff" stroke="#a155e0" stroke-width="1.5" />
+              <text x="340" y="65" font-family="'Inter', sans-serif" font-size="10" font-weight="700" fill="#a155e0">Bedrock Guardrails</text>
+              <text x="340" y="80" font-family="'Inter', sans-serif" font-size="8" fill="#232f3e">Bộ lọc nội dung độc hại</text>
+              <text x="340" y="95" font-family="'Inter', sans-serif" font-size="8" font-weight="700" fill="#db0000">Ngăn chặn ảo giác &amp; PII</text>
+
+              <!-- DynamoDB audit store -->
+              <rect x="330" y="120" width="160" height="65" rx="4" fill="#f4fbf7" stroke="#1d8102" stroke-width="1.5" />
+              <text x="340" y="140" font-family="'Inter', sans-serif" font-size="10" font-weight="700" fill="#1d8102">DynamoDB Audit</text>
+              <text x="340" y="155" font-family="'Inter', sans-serif" font-size="8" fill="#232f3e">Nhật ký sàng lọc</text>
+              <text x="340" y="170" font-family="'Inter', sans-serif" font-size="8" font-weight="700" fill="#1d8102">Lưu trữ biệt lập (NoSQL)</text>
+
+              <!-- AWS CloudWatch Monitor -->
+              <rect x="515" y="55" width="135" height="100" rx="4" fill="#f8f9fa" stroke="#687078" stroke-width="1.5" />
+              <text x="523" y="75" font-family="'Inter', sans-serif" font-size="10" font-weight="700" fill="#232f3e">CloudWatch Alarms</text>
+              <text x="523" y="95" font-family="'Inter', sans-serif" font-size="8" fill="#687078">Giám sát Anomaly</text>
+              <text x="523" y="110" font-family="'Inter', sans-serif" font-size="8" fill="#687078">Phát hiện lỗi &gt; 5%</text>
+              <text x="523" y="130" font-family="'Inter', sans-serif" font-size="9" font-weight="700" fill="#c8511b">Báo động SMS &amp; Email</text>
+
+              <!-- Arrows -->
+              <path d="M 125 105 L 170 105" stroke="#8c9ba5" stroke-width="1.5" marker-end="url(#small_arrow)" />
+              <path d="M 300 90 L 330 75" stroke="#c8511b" stroke-width="1.5" marker-end="url(#small_arrow)" />
+              <path d="M 300 120 L 330 145" stroke="#c8511b" stroke-width="1.5" marker-end="url(#small_arrow)" />
+              <path d="M 490 85 L 515 95" stroke="#8c9ba5" stroke-width="1.5" marker-end="url(#small_arrow)" />
+              <path d="M 490 150 L 515 120" stroke="#8c9ba5" stroke-width="1.5" marker-end="url(#small_arrow)" />
+            </svg>
+          </div>
+          <p class="architecture-caption">Kiến trúc 3: Bộ khung bảo vệ an toàn và kiểm toán tuân thủ dựa trên mô hình Genpact riskCanvas. Tích hợp Bedrock Guardrails lọc dữ liệu xấu nhạy cảm trước khi đưa vào Lambda xử lý, tự động hóa ghi nhật ký bất biến vào DynamoDB và đồng bộ hóa báo động lỗi qua CloudWatch.</p>
+        </div>
+
+        <h2>Học Hỏi Case Study Robinhood: Giải Pháp Phễu Lọc Tối Ưu ROI</h2>
+        <p>
+          Bằng việc nghiên cứu sâu sắc case study **Robinhood FinCrimes Agent** tại AWS re:Invent 2024, chúng tôi nhận thấy Robinhood đã ứng dụng bộ định tuyến Amazon Bedrock kết hợp các mô hình nhỏ, tối ưu hóa tối đa chi phí suy luận (giảm tới 80% giá trị token) bằng cách tránh các mô hình siêu trọng như Claude 3.5 Sonnet cho các tác vụ mang tính chất lặp lại.
+        </p>
+        <p>
+          Trong sao kê ngân hàng Việt Nam, phần lớn giao dịch là các khoản chi lặp lại đều đặn hàng tháng hoặc các thương hiệu cực kỳ phổ biến (ví dụ: `GRAB`, `NETFLIX`, `VINMART`, `TIKI`, `SHOPEE`). Chúng tôi đã thiết kế bộ lọc kép **Hybrid Classification Engine** tương tự mô hình phễu của Robinhood:
+        </p>
+        
+        <!-- Code Block Widget -->
+        <div class="aws-code-container">
+          <div class="aws-code-header">
+            <span>Mô hình phân luồng kép tối ưu chi phí LLM</span>
+            <span>hybrid_router.py</span>
+          </div>
+          <pre class="aws-code"><span class="code-comment">// Cấu trúc quy trình định tuyến hybrid của Đội G9</span>
+def classify_transaction(txn, user_rules):
+    # Tầng 1: Đối khớp Quy tắc Regex (Local Rules - Chi phí $0)
+    matched_category = match_regex_rules(txn.description, user_rules)
+    if matched_category:
+        return {"category": matched_category, "confidence": 1.0, "source": "RULE"}
+    
+    # Tầng 2: Fallback lên AWS Bedrock Claude Haiku khi gặp merchant lạ
+    ai_result = call_bedrock_claude_haiku(txn)
+    return {**ai_result, "source": "AI"}</pre>
+        </div>
+
+        <p>
+          <strong>Đo lường hiệu quả thực tế:</strong>
+          Qua thực nghiệm chạy thử trên tệp sao kê mẫu gồm 50 dòng giao dịch của người dùng:
+        </p>
+        <ul>
+          <li>
+            <strong>32 giao dịch (64%)</strong> được nhận diện thành công ngay tại Tầng 1 bằng bộ Regex Rules biên. Hệ thống phản hồi ngay tức khắc, <strong>chi phí API Bedrock tiêu tốn đúng $0.00.</strong>
+          </li>
+          <li>
+            <strong>18 giao dịch lạ (36%)</strong> được đẩy lên AWS Bedrock Claude Haiku để xử lý. Tổng lượng token tiêu thụ chỉ khoảng 5.400 input tokens và 720 output tokens.
+          </li>
+          <li>
+            <strong>Tổng chi phí suy luận thực tế:</strong> Chỉ vỏn vẹn **$0.014** cho toàn bộ file sao kê! Nếu không có tầng lọc Regex, chi phí sẽ tăng gấp 3 lần và độ trễ hệ thống tăng lên 180%.
+          </li>
+        </ul>
+
+        <h2>Học Hỏi Case Study Morgan Stanley &amp; Genpact: An Toàn Dữ Liệu &amp; Quy Trình HITL</h2>
+        <p>
+          Trong quản lý tiền bạc, sự chính xác là tối thượng. AI có thể phỏng đoán sai (Ảo giác - Hallucination), đặc biệt là với các mô tả viết tắt kỳ lạ của ngân hàng. 
+        </p>
+        <p>
+          Để đảm bảo chủ quyền dữ liệu tài chính như cách **Morgan Stanley** cam kết bảo vệ thông tin khách hàng trên Amazon Bedrock (dữ liệu không bao giờ rời khỏi VPC riêng tư và không dùng để train lại mô hình gốc), chúng tôi cô lập tuyệt đối tầng cơ sở dữ liệu trong Subnet riêng tư (Private Subnet) và phân quyền chặt chẽ thông qua IAM least-privilege (Năng lực bắt buộc #6 và #7 - VPC &amp; IAM).
+        </p>
+        <p>
+          Bên cạnh đó, học hỏi từ nền tảng **riskCanvas của Genpact** trong việc rà soát rủi ro giao dịch tài chính FSI, chúng tôi áp dụng nguyên tắc <strong>Trả quyền kiểm soát (Return of Control)</strong> và tích hợp **Hàng chờ kiểm duyệt một chạm (Review Queue)** tương tự dự án thắng giải **Vigil AI**:
+        </p>
+        <ol>
+          <li>
+            Bất kỳ giao dịch nào đi qua Bedrock có điểm tự tin <code>confidence &lt; 0.8</code> sẽ bị gán nhãn <code>NEEDS_REVIEW</code> và đẩy vào hàng đợi **Review Queue** trên giao diện Next.js, không tự động cộng vào biểu đồ dòng tiền.
+          </li>
+          <li>
+            Người dùng chỉ cần sửa lại danh mục đúng thông qua dropdown. Ngay lúc đó, hệ thống sẽ kích hoạt một **Công tắc ghi nhớ (Remember Switch)**.
+          </li>
+          <li>
+            Khi được phê duyệt, hệ thống gọi API <code>POST /rules</code> để sinh một quy tắc Regex mới lưu thẳng vào Database (Lấy cảm hứng từ cơ chế thích ứng của **EveryDollar**). Lần tải sao kê sau, giao dịch đó lập tức được phân loại tại Tầng 1 với chi phí bằng $0. AI đã tự động học hỏi thích ứng từ chính người dùng.
+          </li>
+        </ol>
+
+        <!-- Callout (AWS Warning Style) -->
+        <div class="aws-callout">
+          <div class="aws-callout-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle;"><polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"></polygon><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+            Khối Quyết Định An Toàn Hệ Thống (AI Safety)
+          </div>
+          <p>
+            Bằng việc bắt buộc trả quyền kiểm duyệt cho con người (Return of Control) ở các giao dịch có độ tin cậy thấp, chúng tôi đảm bảo dữ liệu ghi nhận vào cơ sở dữ liệu luôn đạt độ chính xác 100%, bảo vệ downstream chart của người dùng khỏi mọi hiện tượng ảo giác (hallucination) của mô hình AI.
+          </p>
+        </div>
+
+        <h2>Đo Lường Ngân Sách Thực Tế: Hóa Đơn AWS Dưới $30/Tháng</h2>
+        <p>
+          Nhờ triệt để áp dụng triết lý thiết kế Serverless và Hybrid, hóa đơn vận hành thực tế đo lường qua **AWS Cost Explorer** và **Cost Anomaly Detection** của chúng tôi ghi nhận những số liệu đáng kinh ngạc trong giai đoạn Lean Product Launch, tương đương mô hình vận hành cực kỳ tối giản của **TokenIQ**:
+        </p>
+
+        <div class="aws-table-container">
+          <table class="aws-blog-table">
+            <thead>
+              <tr>
+                <th>Tầng Dịch Vụ</th>
+                <th>Tài Nguyên Sử Dụng</th>
+                <th>Chi Phí/Ngày (Thực tế)</th>
+                <th>Ước tính/Tháng</th>
+                <th>Đánh giá Hiệu Năng &amp; Kỷ Luật Tài Nguyên</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>1. Phân phối Giao diện</strong></td>
+                <td>Amazon CloudFront + S3</td>
+                <td>$0.01</td>
+                <td>$0.30</td>
+                <td>Không tốn chi phí chạy ngầm. Băng thông CDN miễn phí ở dung lượng hackathon.</td>
+              </tr>
+              <tr>
+                <td><strong>2. Máy Chủ Tính Toán</strong></td>
+                <td>AWS Lambda / AWS App Runner</td>
+                <td>$0.12</td>
+                <td>$3.60</td>
+                <td>Không chịu phí khi không có request. Thời gian xử lý trung bình chỉ 85ms/request.</td>
+              </tr>
+              <tr>
+                <td><strong>3. Cơ Sở Dữ Liệu</strong></td>
+                <td>Amazon RDS PostgreSQL (db.t4g.micro)</td>
+                <td>$0.55</td>
+                <td>$16.50</td>
+                <td>Là cost driver lớn nhất nhưng nằm trong kế hoạch. Tắt tính năng Multi-AZ để tiết kiệm 50% chi phí.</td>
+              </tr>
+              <tr>
+                <td><strong>4. Trí Tuệ Nhân Tạo</strong></td>
+                <td>Amazon Bedrock Claude Haiku</td>
+                <td>$0.08</td>
+                <td>$2.40</td>
+                <td>Mức chi phí tối thiểu nhờ phễu lọc quy tắc Regex biên giải quyết 64% lượng truy vấn.</td>
+              </tr>
+              <tr style="font-weight: 700; background-color: var(--aws-bg-light); color: var(--aws-squid-ink);">
+                <td>TỔNG CỘNG</td>
+                <td>Hệ thống hoàn chỉnh</td>
+                <td>$0.76</td>
+                <td>$22.80</td>
+                <td>Xuất sắc vượt qua mốc Lean Launch thành công dưới $30/tháng!</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2>Các Quyết Định Kỹ Thuật Đánh Đổi (Measured Trade-offs)</h2>
+        
+        <div class="aws-callout">
+          <div class="aws-callout-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle;"><line x1="4" y1="21" x2="4" y2="14"></line><line x1="4" y1="10" x2="4" y2="3"></line><line x1="12" y1="21" x2="12" y2="12"></line><line x1="12" y1="8" x2="12" y2="3"></line><line x1="20" y1="21" x2="20" y2="16"></line><line x1="20" y1="12" x2="20" y2="3"></line><line x1="1" y1="14" x2="7" y2="14"></line><line x1="9" y1="8" x2="15" y2="8"></line><line x1="17" y1="16" x2="23" y2="16"></line></svg>
+            Quyết định 1: Dịch chuyển từ AWS Amplify sang S3 + CloudFront
+          </div>
+          <p style="margin-top: 8px;">
+            <strong>Lý do lựa chọn:</strong> AWS Amplify tự động cấu hình các container CI/CD chạy ngầm rất tốn tiền (~$15-$20/tháng). Chúng tôi chọn biên dịch tĩnh Next.js và đẩy thẳng lên S3 kết hợp CloudFront phân phối nội dung toàn cầu.
+          </p>
+          <p>
+            <strong>Đo lường đánh đổi:</strong> Tốc độ truyền tải trang ban đầu (First Contentful Paint) cải thiện **35%** (giảm từ 1.2s xuống 0.78s), trong khi chi phí duy trì giảm **98%** (chỉ tốn vài xu lẻ mỗi tháng).
+          </p>
+        </div>
+
+        <div class="aws-callout aws-info-callout">
+          <div class="aws-callout-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle;"><line x1="4" y1="21" x2="4" y2="14"></line><line x1="4" y1="10" x2="4" y2="3"></line><line x1="12" y1="21" x2="12" y2="12"></line><line x1="12" y1="8" x2="12" y2="3"></line><line x1="20" y1="21" x2="20" y2="16"></line><line x1="20" y1="12" x2="20" y2="3"></line><line x1="1" y1="14" x2="7" y2="14"></line><line x1="9" y1="8" x2="15" y2="8"></line><line x1="17" y1="16" x2="23" y2="16"></line></svg>
+            Quyết định 2: Lựa chọn mô hình Bedrock Claude Haiku thay vì Claude Sonnet
+          </div>
+          <p style="margin-top: 8px;">
+            <strong>Lý do lựa chọn:</strong> Nhiệm vụ phân loại giao dịch (Classification) là tác vụ đơn giản, không đòi hỏi khả năng tư duy suy luận chuyên sâu của Claude Sonnet.
+          </p>
+          <p>
+            <strong>Đo lường đánh đổi:</strong> Claude Haiku có tốc độ phản hồi trung bình là **0.4s** (Sonnet là 2.1s - nhanh hơn gấp 5 lần). Chi phí trên mỗi 1.000 tokens của Haiku rẻ hơn **20 lần** so với Sonnet, giúp duy trì hóa đơn AI ở mức tối thiểu mà không làm giảm độ chính xác phân loại.
+          </p>
+        </div>
+
+        <h2>Kết Luận</h2>
+        <p>
+          Bằng việc hoàn thành thắng lợi đợt **Lean Product Launch** với ngân sách thực tế đo lường được **dưới $30/tháng**, Đội G9 đã chứng minh một triết lý thiết kế hệ thống quan trọng: <i>Chất lượng của một kỹ sư mây không nằm ở việc họ tiêu bao nhiêu tiền để dựng hệ thống, mà nằm ở việc họ tối ưu hóa được bao nhiêu chi phí mà vẫn giữ được chất lượng dịch vụ ở mức cao nhất.</i>
+        </p>
+        <p>
+          Mô hình phân tầng Hybrid kết hợp Human-in-the-loop của chúng tôi là một mẫu thiết kế sản xuất (Production Blueprint) hoàn hảo cho các ứng dụng tài chính cá nhân thế hệ mới trên nền tảng đám mây AWS.
+        </p>
+      </div>
+
+    </article>
+
+    <!-- Right Column: Sidebar Widgets -->
+    <aside class="blog-sidebar-col">
+      
+      <!-- Widget 1: Author Info -->
+      <div class="sidebar-widget">
+        <h3 class="sidebar-widget-title">Đội Ngũ Thực Hiện</h3>
+        <div class="sidebar-author-card">
+          <div class="sidebar-author-avatar">G9</div>
+          <div class="sidebar-author-info">
+            <h4>Đội Ngũ G9 Builders</h4>
+            <p>AWS Cloud & AI Engineers</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Widget 2: Additional Resources -->
+      <div class="sidebar-widget">
+        <h3 class="sidebar-widget-title">Tài Nguyên Liên Quan</h3>
+        <ul class="sidebar-resources-list">
+          <li><a href="#">Báo cáo AWS re:Invent 2024: Kiến trúc Robinhood FinCrimes Agent</a></li>
+          <li><a href="#">Tài liệu AWS: Tối ưu hóa chi phí với S3 &amp; CloudFront</a></li>
+          <li><a href="#">Hướng dẫn bảo mật Serverless APIs trên AWS Lambda</a></li>
+          <li><a href="#">Vận hành PostgreSQL an toàn trong mạng VPC cô lập</a></li>
+        </ul>
+      </div>
+
+      <!-- Widget 3: Newsletter SignUp -->
+      <div class="sidebar-widget" style="background-color: var(--aws-bg-light);">
+        <h3 class="sidebar-widget-title font-semibold">Đăng ký AWS Blog Newsletter</h3>
+        <p style="font-size: 0.85rem; margin-bottom: 12px; color: #4d5761;">
+          Nhận ngay các bài viết nghiên cứu kỹ thuật, giải pháp kiến trúc AI tinh gọn và AWS mới nhất gửi thẳng vào hòm thư của bạn.
+        </p>
+        <button style="width: 100%; background-color: var(--aws-orange); color: var(--aws-squid-ink); border: none; padding: 10px; font-weight: 700; border-radius: 4px; cursor: pointer; transition: background-color 0.2s;">
+          Đăng Ký Ngay
+        </button>
+      </div>
+
+    </aside>
+
+  </main>
+
+  <!-- AWS Global Footer -->
+  <footer class="aws-global-footer">
+    <div class="aws-global-footer-container">
+      <div class="aws-footer-logo">Amazon Web Services</div>
+      <ul class="aws-footer-links">
+        <li><a href="#">Chính sách bảo mật</a></li>
+        <li><a href="#">Điều khoản sử dụng</a></li>
+        <li><a href="#">Liên hệ chúng tôi</a></li>
+        <li><a href="#">Hỗ trợ kỹ thuật</a></li>
+      </ul>
+    </div>
+  </footer>
+
+</body>
+</html>

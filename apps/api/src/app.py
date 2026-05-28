@@ -34,7 +34,14 @@ def _resolve_user_id(x_user_id: Optional[str]) -> str:
 
 @app.get("/health")
 def health() -> dict:
-    return {"status": "ok"}
+    return {
+        "status": "ok",
+        "backends": {
+            "ai": config.ai_backend,
+            "storage": config.storage_backend,
+            "userstore": config.userstore_backend,
+        }
+    }
 
 
 @app.post("/upload")
@@ -68,8 +75,9 @@ def summary(
 def transactions(
     month: Optional[str] = None,
     x_user_id: Optional[str] = Header(default=None),
-) -> list:
-    return handlers.handle_list_transactions(_resolve_user_id(x_user_id), month, userstore)
+) -> dict:
+    txns = handlers.handle_list_transactions(_resolve_user_id(x_user_id), month, userstore)
+    return {"transactions": txns}
 
 
 class TransactionUpdate(BaseModel):
@@ -110,3 +118,14 @@ def create_rule(
     }
     userstore.add_rule(user_id, rule)
     return rule
+
+
+@app.delete("/transactions")
+def reset_transactions(
+    x_user_id: Optional[str] = Header(default=None),
+) -> dict:
+    """Delete all transactions for a user — used by E2E tests to reset state."""
+    user_id = _resolve_user_id(x_user_id)
+    userstore.clear_transactions(user_id)
+    return {"status": "ok", "user_id": user_id}
+

@@ -35,6 +35,16 @@ const localeKey = "money-coach-locale-v1"
 const API_BASE_URL = "http://127.0.0.1:8000"
 const USER_ID = "demo-user"
 
+/** Safely coerce any API shape to a plain array of transactions */
+function normalizeTxns(data: unknown): MoneyState["transactions"] {
+  if (Array.isArray(data)) return data as MoneyState["transactions"]
+  if (data && typeof data === "object") {
+    const obj = data as Record<string, unknown>
+    if (Array.isArray(obj["transactions"])) return obj["transactions"] as MoneyState["transactions"]
+  }
+  return []
+}
+
 const MoneyCoachContext = React.createContext<MoneyCoachContextValue | null>(
   null
 )
@@ -71,13 +81,16 @@ export function MoneyCoachProvider({
           if (!r.ok) throw new Error("Backend failed")
           return r.json()
         })
-        .then((txns) => {
+        .then((data) => {
+          const txns = normalizeTxns(data)
           setState((current) => {
             const stored = window.localStorage.getItem(storageKey)
             let localState = current
             if (stored) {
               try {
-                localState = JSON.parse(stored) as MoneyState
+                const parsed = JSON.parse(stored) as MoneyState
+                // Ensure persisted transactions is always an array
+                localState = { ...parsed, transactions: normalizeTxns(parsed.transactions) }
               } catch {}
             }
             return {
@@ -116,7 +129,8 @@ export function MoneyCoachProvider({
     try {
       const res = await fetch(`${API_BASE_URL}/transactions`, { headers: { "x-user-id": USER_ID } })
       if (!res.ok) return
-      const txns = await res.json()
+      const data = await res.json()
+      const txns = normalizeTxns(data)
       setState((current) => ({ ...current, transactions: txns }))
     } catch (err) {
       console.error(err)
