@@ -1,18 +1,72 @@
 """FastAPI app for BudgetBot. Runtime-agnostic."""
+import json
+import time
+import uuid
 from pathlib import Path
 from typing import Literal, Optional
 
-from fastapi import FastAPI, File, Header, HTTPException, UploadFile, Request
+from fastapi import FastAPI, File, Header, HTTPException, UploadFile, Request, Depends
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
+from starlette.middleware.base import BaseHTTPMiddleware
 
 from src.config import config
 from src.adapters import factory
 from src import handlers
 from src.auth import get_current_user
-from fastapi import Depends
+
 app = FastAPI(title="BudgetBot API")
+
+# --- Structured Logging Middleware (For CloudWatch Logs Insights - Req 01 & 02) ---
+class StructuredLoggingMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        # 1. Sinh hoặc nhận request_id để tracing
+        request_id = request.headers.get("X-Request-ID") or str(uuid.uuid4())
+        request.state.request_id = request_id
+        
+        start_time = time.time()
+        error_type = None
+        error_message = None
+        status_code = 500
+        
+        try:
+            response = await call_next(request)
+            status_code = response.status_code
+            response.headers["X-Request-ID"] = request_id
+            return response
+        except Exception as exc:
+            error_type = type(exc).__name__
+            error_message = str(exc)
+            raise exc
+        finally:
+            latency_ms = (time.time() - start_time) * 1000
+            
+            # Format log JSON
+            log_record = {
+                "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+                "level": "ERROR" if status_code >= 500 else "INFO",
+                "service": "budgetbot-backend",
+                "environment": "production",
+                "request_id": request_id,
+                "route": request.url.path,
+                "status_code": status_code,
+                "latency_ms": round(latency_ms, 2),
+                "error_type": error_type,
+                "error_message": error_message
+            }
+            
+            # In thẳng ra stdout/stderr dưới dạng JSON line để CloudWatch bắt lấy
+            print(json.dumps(log_record), flush=True)
+
+app.add_middleware(StructuredLoggingMiddleware)
+
+# --- AWS Lambda Wrapper via Mangum ---
+try:
+    from mangum import Mangum
+    handler = Mangum(app)
+except ImportError:
+    handler = None
 
 MAX_UPLOAD_BYTES = 2 * 1024 * 1024
 ALLOWED_UPLOAD_TYPES = {
@@ -120,28 +174,6 @@ async def upload(
     except handlers.CsvValidationError as exc:
         payload = {"row_number": exc.row_number} if exc.row_number is not None else {}
         raise _bad_request(exc.code, exc.message, **payload) from exc
-
-
-class ChatMessage(BaseModel):
-    message: str
-    image: Optional[str] = None
-    session_id: Optional[str] = None
-
-@app.post("/chat")
-def chat(
-    payload: ChatMessage,
-    user_id: str = Depends(get_current_user),
-) -> dict:
-    if not payload.message.strip() and not payload.image:
-        raise _bad_request("EMPTY_MESSAGE", "Message or image must be provided")
-    return handlers.handle_chat(
-        user_id=user_id,
-        question=payload.message,
-        userstore=userstore,
-        ai_client=ai_client,
-        image=payload.image,
-        session_id=payload.session_id,
-    )
 
 
 @app.get("/summary")
