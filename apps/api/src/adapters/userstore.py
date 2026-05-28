@@ -84,7 +84,15 @@ class PostgresUserStore:
         import psycopg2.extras
         with self.conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cur:
             cur.execute(sql, params)
-            return [dict(r) for r in cur.fetchall()]
+            res = []
+            for r in cur.fetchall():
+                d = dict(r)
+                if d.get("amount") is not None:
+                    d["amount"] = float(d["amount"])
+                if d.get("confidence") is not None:
+                    d["confidence"] = float(d["confidence"])
+                res.append(d)
+            return res
 
     def add_rule(self, user_id: str, rule: dict) -> None:
         with self.conn.cursor() as cur:
