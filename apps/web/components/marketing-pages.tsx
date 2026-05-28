@@ -12,12 +12,29 @@ import {
   ScanSearchIcon,
   ShieldCheckIcon,
   UploadIcon,
+  LogOut,
+  Sparkles,
+  UserIcon,
 } from "lucide-react"
 
 import { useMoneyCoach } from "@/components/money-coach-provider"
 import { Alert, AlertDescription } from "@workspace/ui/components/alert"
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@workspace/ui/components/avatar"
 import { Badge } from "@workspace/ui/components/badge"
 import { Button } from "@workspace/ui/components/button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@workspace/ui/components/dropdown-menu"
 import {
   Card,
   CardContent,
@@ -40,7 +57,8 @@ function Copy({ vi, en }: { vi: string; en: string }) {
 }
 
 export function LandingPage() {
-  const { locale, setLocale } = useMoneyCoach()
+  const { locale, setLocale, signedIn, signOut } = useMoneyCoach()
+  const router = useRouter()
 
   return (
     <div className="min-h-svh bg-background">
@@ -60,17 +78,65 @@ export function LandingPage() {
             <LanguagesIcon data-icon="inline-start" />
             {locale === "vi" ? "EN" : "VI"}
           </Button>
-          <Button variant="ghost" asChild className="hidden sm:inline-flex">
-            <Link href="/auth/sign-in">
-              <Copy vi="Đăng nhập" en="Sign in" />
-            </Link>
-          </Button>
-          <Button asChild>
-            <Link href="/auth/sign-in">
-              <Copy vi="Dùng bản demo" en="Try demo" />
-              <ArrowRightIcon data-icon="inline-end" />
-            </Link>
-          </Button>
+
+          {signedIn ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-2">
+                  <Avatar className="h-5 w-5">
+                    <AvatarFallback className="text-[10px]">MC</AvatarFallback>
+                  </Avatar>
+                  <span className="hidden sm:inline">Demo User</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel className="font-normal">
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium leading-none">Demo User</p>
+                    <p className="text-xs leading-none text-muted-foreground">demo@example.com</p>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuGroup>
+                  <DropdownMenuItem asChild>
+                    <Link href="/app/overview" className="cursor-pointer w-full">
+                      <UserIcon className="mr-2 h-4 w-4" />
+                      <span>{locale === "vi" ? "Dashboard của tôi" : "My Dashboard"}</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <Sparkles className="mr-2 h-4 w-4" />
+                    <span>{locale === "vi" ? "Nâng cấp Pro" : "Upgrade to Pro"}</span>
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="cursor-pointer"
+                  onClick={() => {
+                    signOut()
+                    router.push("/")
+                  }}
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>{locale === "vi" ? "Đăng xuất" : "Log out"}</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <>
+              <Button variant="ghost" asChild className="hidden sm:inline-flex">
+                <Link href="/auth/sign-in">
+                  <Copy vi="Đăng nhập" en="Sign in" />
+                </Link>
+              </Button>
+              <Button asChild>
+                <Link href="/auth/sign-in">
+                  <Copy vi="Dùng bản demo" en="Try demo" />
+                  <ArrowRightIcon data-icon="inline-end" />
+                </Link>
+              </Button>
+            </>
+          )}
         </div>
       </header>
 
@@ -346,22 +412,31 @@ export function AuthPage({ mode }: { mode: string }) {
           ) : null}
           <form
             className="mt-4"
-            onSubmit={(event) => {
-              event.preventDefault()
-              if (isForgot) {
-                setSubmitted(true)
-              } else if (isSignup) {
-                router.push("/auth/verify")
-              } else {
-                enterDemo()
-              }
-            }}
+              onSubmit={async (event) => {
+                event.preventDefault()
+                if (isForgot) {
+                  setSubmitted(true)
+                } else if (isSignup) {
+                  router.push("/auth/verify")
+                } else {
+                  try {
+                    const form = event.currentTarget as HTMLFormElement
+                    const emailInput = form.elements.namedItem("email") as HTMLInputElement
+                    const passwordInput = form.elements.namedItem("password") as HTMLInputElement
+                    await signIn(emailInput?.value, passwordInput?.value)
+                    router.push("/app/overview")
+                  } catch (e) {
+                    alert("Đăng nhập thất bại. Vui lòng kiểm tra lại email và mật khẩu.")
+                  }
+                }
+              }}
           >
             <FieldGroup>
               <Field>
                 <FieldLabel htmlFor="email">Email</FieldLabel>
                 <Input
                   id="email"
+                  name="email"
                   type="email"
                   placeholder="minh@example.com"
                   defaultValue="demo@example.com"
@@ -373,7 +448,7 @@ export function AuthPage({ mode }: { mode: string }) {
                   <FieldLabel htmlFor="password">
                     {locale === "vi" ? "Mật khẩu" : "Password"}
                   </FieldLabel>
-                  <Input id="password" type="password" defaultValue="password123" minLength={8} required />
+                  <Input id="password" name="password" type="password" defaultValue="password123" minLength={8} required />
                   {isSignup ? (
                     <FieldDescription>
                       {locale === "vi"

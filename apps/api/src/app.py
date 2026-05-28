@@ -10,8 +10,8 @@ from pydantic import BaseModel, Field
 from src.config import config
 from src.adapters import factory
 from src import handlers
-
-
+from src.auth import get_current_user
+from fastapi import Depends
 app = FastAPI(title="BudgetBot API")
 
 MAX_UPLOAD_BYTES = 2 * 1024 * 1024
@@ -60,22 +60,6 @@ storage = factory.make_storage()
 userstore = factory.make_userstore()
 
 
-def _resolve_user_id(x_user_id: Optional[str], request: Optional[Request] = None) -> str:
-    if request and hasattr(request, "scope"):
-        aws_event = request.scope.get("aws.event")
-        if aws_event and isinstance(aws_event, dict):
-            request_context = aws_event.get("requestContext", {})
-            authorizer = request_context.get("authorizer", {})
-            jwt_data = authorizer.get("jwt", {})
-            claims = jwt_data.get("claims", {}) or authorizer.get("claims", {})
-            
-            user_id = claims.get("sub") or claims.get("username") or claims.get("cognito:username")
-            if user_id:
-                return user_id
-
-    if x_user_id:
-        return x_user_id
-    return config.default_user_id
 
 
 def _bad_request(code: str, message: str, **extra: object) -> HTTPException:
@@ -117,11 +101,9 @@ def health() -> dict:
 
 @app.post("/upload")
 async def upload(
-    request: Request,
     file: UploadFile = File(...),
-    x_user_id: Optional[str] = Header(default=None),
+    user_id: str = Depends(get_current_user),
 ) -> dict:
-    user_id = _resolve_user_id(x_user_id, request)
     data = await file.read()
     if not data:
         raise _bad_request("EMPTY_FILE", "Uploaded file is empty")
@@ -142,20 +124,18 @@ async def upload(
 
 @app.get("/summary")
 def summary(
-    request: Request,
     month: Optional[str] = None,
-    x_user_id: Optional[str] = Header(default=None),
+    user_id: str = Depends(get_current_user),
 ) -> dict:
-    return handlers.handle_summary(_resolve_user_id(x_user_id, request), month, userstore)
+    return handlers.handle_summary(user_id, month, userstore)
 
 
 @app.get("/transactions")
 def transactions(
-    request: Request,
     month: Optional[str] = None,
-    x_user_id: Optional[str] = Header(default=None),
+    user_id: str = Depends(get_current_user),
 ) -> dict:
-    txns = handlers.handle_list_transactions(_resolve_user_id(x_user_id, request), month, userstore)
+    txns = handlers.handle_list_transactions(user_id, month, userstore)
     return {"transactions": txns}
 
 
@@ -167,10 +147,8 @@ class TransactionUpdate(BaseModel):
 def update_transaction(
     txn_id: str,
     update_data: TransactionUpdate,
-    request: Request,
-    x_user_id: Optional[str] = Header(default=None),
+    user_id: str = Depends(get_current_user),
 ) -> dict:
-    user_id = _resolve_user_id(x_user_id, request)
     updates = {}
     if update_data.category is not None:
         updates["category"] = update_data.category
@@ -189,11 +167,9 @@ class RuleCreate(BaseModel):
 @app.post("/rules")
 def create_rule(
     rule_data: RuleCreate,
-    request: Request,
-    x_user_id: Optional[str] = Header(default=None),
+    user_id: str = Depends(get_current_user),
 ) -> dict:
     import uuid
-    user_id = _resolve_user_id(x_user_id, request)
     rule = {
         "id": "rule-" + uuid.uuid4().hex[:8],
         "contains": rule_data.contains,
@@ -205,10 +181,8 @@ def create_rule(
 
 @app.delete("/transactions")
 def reset_transactions(
-    request: Request,
-    x_user_id: Optional[str] = Header(default=None),
+    user_id: str = Depends(get_current_user),
 ) -> dict:
     """Delete all transactions for a user — used by E2E tests to reset state."""
-    user_id = _resolve_user_id(x_user_id, request)
     userstore.clear_transactions(user_id)
     return {"status": "ok", "user_id": user_id}

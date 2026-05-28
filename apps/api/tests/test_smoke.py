@@ -14,8 +14,14 @@ os.environ["USERSTORE_SQLITE_PATH"] = str(Path(_tmp) / "transactions.db")
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from fastapi.testclient import TestClient
+from fastapi import Request
 from src.app import app
+from src.auth import get_current_user
 
+def override_get_current_user(request: Request):
+    return request.headers.get("x-user-id", "test-user")
+
+app.dependency_overrides[get_current_user] = override_get_current_user
 
 client = TestClient(app)
 

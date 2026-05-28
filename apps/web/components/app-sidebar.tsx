@@ -19,6 +19,7 @@ import {
 } from "lucide-react"
 
 import { useMoneyCoach } from "@/components/money-coach-provider"
+import { NavUser } from "@/components/nav-user"
 import {
   Sidebar,
   SidebarContent,
@@ -152,21 +153,18 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              onClick={() => {
-                signOut()
-                router.push("/auth/sign-in")
-              }}
-            >
-              <LogOutIcon />
-              <span>
-                {locale === "vi" ? "Đăng xuất demo" : "Sign out demo"}
-              </span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
+        <NavUser
+          user={{
+            name: "Demo User",
+            email: "demo@example.com",
+            avatar: "",
+          }}
+          locale={locale}
+          onSignOut={() => {
+            signOut()
+            router.push("/auth/sign-in")
+          }}
+        />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>
