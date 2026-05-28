@@ -75,10 +75,18 @@ def _emit_ai_metric(metric_name: str, value: float, unit: str = "None", model_id
     """Emit custom AI metric to AWS CloudWatch with safe try-except block."""
     try:
         import boto3
+        from botocore.config import Config
         from src.config import config
         
         region = getattr(config, "aws_region", "us-west-2") or "us-west-2"
-        cw = boto3.client("cloudwatch", region_name=region)
+        # Cấu hình connect & read timeout siêu ngắn (0.5s) và không retry 
+        # để tránh làm nghẽn luồng xử lý chính trong VPC không có Internet/CloudWatch Endpoint
+        cw_config = Config(
+            connect_timeout=0.5,
+            read_timeout=0.5,
+            retries={"max_attempts": 1}
+        )
+        cw = boto3.client("cloudwatch", region_name=region, config=cw_config)
         
         dimensions = [
             {"Name": "Environment", "Value": "production"},
@@ -98,8 +106,8 @@ def _emit_ai_metric(metric_name: str, value: float, unit: str = "None", model_id
                 }
             ]
         )
-    except Exception:
-        pass
+    except Exception as e:
+        print(f"[Metrics Warning] Skip emitting metric {metric_name}: {e}", flush=True)
 
 
 class BedrockAI:
