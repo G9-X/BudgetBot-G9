@@ -10,15 +10,15 @@
     "typecheck": "turbo typecheck"
   },
   "devDependencies": {
-    "@workspace/eslint-config": "workspace:*",
-    "@workspace/typescript-config": "workspace:*",
+    "@workspace/eslint-config": "*",
+    "@workspace/typescript-config": "*",
     "prettier": "^3.8.1",
     "prettier-plugin-tailwindcss": "^0.7.2",
     "turbo": "^2.8.17",
     "typescript": "5.9.3",
     "@types/bun": "latest"
   },
-  "packageManager": "bun@1.3.14",
+  "packageManager": "npm@10.9.3",
   "engines": {
     "node": ">=20"
   },
