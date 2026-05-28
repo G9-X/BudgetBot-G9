@@ -244,3 +244,16 @@ def handle_summary(user_id: str, month: Optional[str], userstore) -> dict:
 
 def handle_list_transactions(user_id: str, month: Optional[str], userstore) -> list:
     return userstore.list_transactions(user_id, month=month)
+
+
+def handle_chat(user_id: str, question: str, userstore, ai_client, image: Optional[str] = None, session_id: Optional[str] = None) -> dict:
+    """Invoke AI Money Coach using Bedrock Agent or direct model fallback."""
+    res = ai_client.chat(user_id=user_id, question=question, image=image, session_id=session_id)
+    if isinstance(res, dict):
+        return {
+            "answer": res.get("answer", ""),
+            "steps": res.get("steps", []),
+            "sources": res.get("sources", [])
+        }
+    return {"answer": res, "steps": [], "sources": []}
+

@@ -126,6 +126,7 @@ type CoachMessage = {
   createdAt: string
   steps?: string[]
   sources?: CoachSource[]
+  image?: string
 }
 
 type CoachSource = {
@@ -1719,7 +1720,7 @@ function CoachWidget() {
 }
 
 function Coach() {
-  const { state, locale } = useMoneyCoach()
+  const { state, locale, askCoach } = useMoneyCoach()
   const prompts: [string, string, string] = [
     text(locale, "Tôi chi nhiều nhất vào đâu?", "Where did I spend the most?"),
     text(
@@ -1747,11 +1748,48 @@ function Coach() {
   ])
   const [draft, setDraft] = React.useState("")
   const [isThinking, setIsThinking] = React.useState(false)
+  const [attachedImage, setAttachedImage] = React.useState<string | null>(null)
+  const fileInputRef = React.useRef<HTMLInputElement>(null)
   const messageCounter = React.useRef(0)
 
-  function sendQuestion(question: string) {
+  function handleFileSelect(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0]
+    if (file) {
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setAttachedImage(reader.result as string)
+      }
+      reader.readAsDataURL(file)
+    }
+    event.target.value = ""
+  }
+
+  function handlePaste(event: React.ClipboardEvent<HTMLTextAreaElement>) {
+    const clipboardData = event.clipboardData
+    if (!clipboardData) return
+    const items = clipboardData.items
+    if (!items) return
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i]
+      if (item && item.type && item.type.indexOf("image") !== -1) {
+        const file = item.getAsFile()
+        if (file) {
+          const reader = new FileReader()
+          reader.onloadend = () => {
+            setAttachedImage(reader.result as string)
+          }
+          reader.readAsDataURL(file)
+          event.preventDefault()
+          break
+        }
+      }
+    }
+  }
+
+  async function sendQuestion(question: string) {
     const trimmed = question.trim()
-    if (!trimmed || isThinking) return
+    if (!trimmed && !attachedImage) return
+    if (isThinking) return
 
     messageCounter.current += 1
     const messageId = messageCounter.current
@@ -1759,29 +1797,41 @@ function Coach() {
       id: `user-${messageId}`,
       role: "user",
       content: trimmed,
-      createdAt: "",
-    }
-    const coachResponse = buildCoachResponse(
-      trimmed,
-      state.transactions,
-      locale
-    )
-    const assistantMessage: CoachMessage = {
-      id: `assistant-${messageId}`,
-      role: "assistant",
-      content: coachResponse.answer,
-      steps: coachResponse.steps,
-      sources: coachResponse.sources,
+      image: attachedImage || undefined,
       createdAt: "",
     }
 
+    const currentImage = attachedImage
+
     setMessages((current) => [...current, userMessage])
     setDraft("")
+    setAttachedImage(null)
     setIsThinking(true)
-    window.setTimeout(() => {
+
+    try {
+      const res = await askCoach(trimmed, currentImage)
+      const assistantMessage: CoachMessage = {
+        id: `assistant-${messageId}`,
+        role: "assistant",
+        content: res.answer,
+        steps: res.steps,
+        sources: res.sources,
+        createdAt: "",
+      }
       setMessages((current) => [...current, assistantMessage])
+    } catch (err) {
+      const errorMessage: CoachMessage = {
+        id: `assistant-error-${messageId}`,
+        role: "assistant",
+        content: locale === "vi" 
+          ? "Xin lỗi, tôi gặp sự cố khi kết nối tới máy chủ AI Coach." 
+          : "Sorry, I encountered an issue connecting to the AI Coach server.",
+        createdAt: "",
+      }
+      setMessages((current) => [...current, errorMessage])
+    } finally {
       setIsThinking(false)
-    }, 250)
+    }
   }
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -1794,8 +1844,8 @@ function Coach() {
       title={text(locale, "Trợ lý tài chính", "Money coach")}
       description={text(
         locale,
-        "Insight demo chỉ dựa trên giao dịch đã lưu, không phải tư vấn đầu tư.",
-        "Demo insights are grounded in stored transactions and are not investment advice."
+        "Insight tài chính của bạn được phân tích bảo mật bằng trí tuệ nhân tạo.",
+        "Your financial insights analyzed securely by artificial intelligence."
       )}
     >
       <div className="grid gap-4 lg:grid-cols-[320px_1fr]">
@@ -1827,9 +1877,9 @@ function Coach() {
         </Card>
         <Card className="min-h-[560px]">
           <CardHeader>
-            <Badge variant="secondary">
-              <BotIcon data-icon="inline-start" />
-              {text(locale, "Chat demo", "Demo chat")}
+            <Badge variant="secondary" className="bg-primary/10 text-primary hover:bg-primary/20">
+              <BotIcon data-icon="inline-start" className="mr-1 h-3 w-3" />
+              AI Money Coach
             </Badge>
             <CardTitle>
               {text(locale, "Hỏi Money Coach", "Ask Money Coach")}
@@ -1837,8 +1887,8 @@ function Coach() {
             <CardDescription>
               {text(
                 locale,
-                "Câu trả lời v1 được tạo local từ summary và giao dịch đã lưu.",
-                "V1 answers are generated locally from stored transaction summaries."
+                "Câu trả lời được phân tích trực tiếp bởi AI Bedrock dựa trên dữ liệu chi tiêu thực tế của bạn.",
+                "Answers are analyzed in real-time by AI Bedrock grounded in your actual spending data."
               )}
             </CardDescription>
           </CardHeader>
@@ -1857,6 +1907,12 @@ function Coach() {
                           : "border bg-background"
                       }`}
                     >
+                      {message.image ? (
+                        <div className="mb-2 max-w-xs overflow-hidden rounded-md border bg-muted/20">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={message.image} alt="Attachment" className="max-h-48 object-contain" />
+                        </div>
+                      ) : null}
                       <p>{message.content}</p>
                       {message.role === "assistant" && message.steps?.length ? (
                         <div className="mt-3 flex flex-col gap-2 border-t pt-3">
@@ -1918,6 +1974,21 @@ function Coach() {
                 ) : null}
               </div>
             </ScrollArea>
+            {attachedImage && (
+              <div className="relative mb-2 w-fit overflow-hidden rounded-md border bg-muted/20 p-1">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={attachedImage} alt="Preview" className="max-h-24 object-contain rounded" />
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="icon"
+                  className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full p-0"
+                  onClick={() => setAttachedImage(null)}
+                >
+                  <span className="text-[10px] font-bold">X</span>
+                </Button>
+              </div>
+            )}
             <form className="flex flex-col gap-2" onSubmit={handleSubmit}>
               <FieldGroup>
                 <Field>
@@ -1930,24 +2001,49 @@ function Coach() {
                         sendQuestion(draft)
                       }
                     }}
+                    onPaste={handlePaste}
                     placeholder={text(
                       locale,
-                      "Hỏi về chi tiêu, subscription, cashflow hoặc giao dịch cần review...",
-                      "Ask about spending, subscriptions, cashflow, or transactions that need review..."
+                      "Hỏi về chi tiêu, hoặc dán (Ctrl+V) / tải lên ảnh hóa đơn để AI tự thêm giao dịch...",
+                      "Ask about spending, or paste (Ctrl+V) / upload receipt image for AI to auto-add..."
                     )}
                     className="min-h-20 resize-none"
                   />
                   <FieldDescription>
                     {text(
                       locale,
-                      "Nhấn Enter để gửi, Shift+Enter để xuống dòng.",
-                      "Press Enter to send, Shift+Enter for a new line."
+                      "Nhấn Enter để gửi, Shift+Enter để xuống dòng. Dán (Ctrl+V) để đính kèm ảnh.",
+                      "Press Enter to send, Shift+Enter for a new line. Paste (Ctrl+V) to attach image."
                     )}
                   </FieldDescription>
                 </Field>
               </FieldGroup>
-              <div className="flex justify-end">
-                <Button type="submit" disabled={!draft.trim() || isThinking}>
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    ref={fileInputRef}
+                    className="hidden"
+                    onChange={handleFileSelect}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isThinking}
+                    title={text(locale, "Đính kèm ảnh hóa đơn/sao kê", "Attach receipt/statement image")}
+                  >
+                    <UploadIcon className="h-4 w-4" />
+                  </Button>
+                  {attachedImage && (
+                    <span className="text-xs text-muted-foreground font-medium">
+                      {text(locale, "Đã chọn 1 ảnh 🖼️", "1 image attached 🖼️")}
+                    </span>
+                  )}
+                </div>
+                <Button type="submit" disabled={(!draft.trim() && !attachedImage) || isThinking}>
                   {text(locale, "Gửi", "Send")}
                   <ArrowRightIcon data-icon="inline-end" />
                 </Button>
@@ -1958,8 +2054,8 @@ function Coach() {
               <AlertDescription>
                 {text(
                   locale,
-                  "Nguồn: tổng hợp local trên summary và giao dịch đang lưu trong trình duyệt. Phase AWS sẽ gọi Bedrock qua backend.",
-                  "Source: local aggregation over summaries and transactions stored in the browser. The AWS phase will call Bedrock through the backend."
+                  "Nguồn: Trợ lý tài chính được vận hành trực tiếp bởi Bedrock qua AWS API Gateway và PostgreSQL thực tế.",
+                  "Source: Personal finance assistant powered directly by Bedrock via AWS API Gateway and PostgreSQL."
                 )}
               </AlertDescription>
             </Alert>

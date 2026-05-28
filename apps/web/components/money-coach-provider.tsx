@@ -30,6 +30,10 @@ interface MoneyCoachContextValue {
     category: Category,
     rememberRule?: boolean
   ) => Promise<void>
+  askCoach: (
+    message: string,
+    image?: string | null
+  ) => Promise<{ answer: string; steps?: string[]; sources?: any[] }>
   toggleRecurring: (id: string) => void
   updateBudget: (category: Category, limit: number) => void
   resetData: () => void
@@ -87,6 +91,20 @@ export function MoneyCoachProvider({
   children: React.ReactNode
 }) {
   const [state, setState] = React.useState<MoneyState>(createSeedState)
+  const sessionId = React.useMemo(() => {
+    if (
+      typeof window !== "undefined" &&
+      typeof crypto !== "undefined" &&
+      typeof crypto.randomUUID === "function"
+    ) {
+      return crypto.randomUUID()
+    }
+    return (
+      "session-" +
+      Math.random().toString(36).substring(2, 15) +
+      Math.random().toString(36).substring(2, 15)
+    )
+  }, [])
   const [locale, setLocaleState] = React.useState<Locale>("vi")
   const [signedIn, setSignedIn] = React.useState(false)
   const [hydrated, setHydrated] = React.useState(false)
@@ -438,13 +456,8 @@ export function MoneyCoachProvider({
 
     window.localStorage.removeItem("cognito-id-token")
     window.localStorage.removeItem("cognito-access-token")
+    window.localStorage.removeItem(sessionKey)
     setSignedIn(false)
-
-    if (domain && clientId) {
-      window.location.href = `https://${domain}/logout?client_id=${clientId}&logout_uri=${encodeURIComponent(
-        redirectUri
-      )}`
-    }
   }, [])
 
   const fetchTransactions = React.useCallback(async () => {
@@ -562,6 +575,48 @@ export function MoneyCoachProvider({
     [state.transactions]
   )
 
+  const askCoach = React.useCallback(
+    async (
+      message: string,
+      image?: string | null
+    ): Promise<{ answer: string; steps?: string[]; sources?: any[] }> => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/chat`, {
+          method: "POST",
+          headers: getAuthHeaders({ "Content-Type": "application/json" }),
+          body: JSON.stringify({
+            message,
+            image: image || undefined,
+            session_id: sessionId,
+          }),
+        })
+        if (!res.ok) {
+          throw new Error("Chat request failed")
+        }
+        const data = await res.json()
+
+        // Auto-refresh frontend state if AI modified the database
+        if (
+          data.steps &&
+          (data.steps.includes("create_transaction") ||
+            data.steps.includes("parse_text_csv"))
+        ) {
+          await fetchTransactions()
+        }
+
+        return {
+          answer: data.answer || "Không có phản hồi từ AI.",
+          steps: data.steps || [],
+          sources: data.sources || [],
+        }
+      } catch (err) {
+        console.error("Chat failed:", err)
+        throw err
+      }
+    },
+    [fetchTransactions, sessionId]
+  )
+
   const toggleRecurring = React.useCallback((id: string) => {
     setState((current) => ({
       ...current,
@@ -583,7 +638,17 @@ export function MoneyCoachProvider({
     []
   )
 
-  const resetData = React.useCallback(() => setState(createSeedState()), [])
+  const resetData = React.useCallback(async () => {
+    try {
+      await fetch(`${API_BASE_URL}/transactions`, {
+        method: "DELETE",
+        headers: getAuthHeaders(),
+      })
+    } catch (err) {
+      console.error("Failed to clear RDS transactions:", err)
+    }
+    setState(createSeedState())
+  }, [])
 
   const value = React.useMemo(
     () => ({
@@ -596,6 +661,7 @@ export function MoneyCoachProvider({
       signOut,
       addImport,
       reviewTransaction,
+      askCoach,
       toggleRecurring,
       updateBudget,
       resetData,
@@ -620,6 +686,7 @@ export function MoneyCoachProvider({
       signOut,
       addImport,
       reviewTransaction,
+      askCoach,
       toggleRecurring,
       updateBudget,
       resetData,
