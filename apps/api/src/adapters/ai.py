@@ -71,11 +71,51 @@ def _parse_base64_image(base64_str: str) -> tuple[bytes, str]:
     return img_bytes, img_format
 
 
+_METRICS_ENABLED = True
+
+
 def _emit_ai_metric(metric_name: str, value: float, unit: str = "None", model_id: str = None):
-    """Emit custom AI metric to AWS CloudWatch with safe try-except block."""
-    # Bypassed to prevent DNS/TCP connect hangs (15s+) in VPC private subnet with no CloudWatch Endpoint.
-    # Native Bedrock metrics and CloudWatch Log Metric Filters are used for observability alarms instead.
-    return
+    """Emit custom AI metric to AWS CloudWatch with safe try-except block, environment bypass, and circuit breaker."""
+    global _METRICS_ENABLED
+    if not _METRICS_ENABLED or os.environ.get("DISABLE_CLOUDWATCH_METRICS") == "true":
+        return
+
+    try:
+        import boto3
+        from botocore.config import Config
+        from src.config import config
+        
+        region = getattr(config, "aws_region", "us-west-2") or "us-west-2"
+        # Cấu hình connect & read timeout siêu ngắn (0.5s) và không retry 
+        # để tránh làm nghẽn luồng xử lý chính trong VPC không có Internet/CloudWatch Endpoint
+        cw_config = Config(
+            connect_timeout=0.5,
+            read_timeout=0.5,
+            retries={"max_attempts": 1}
+        )
+        cw = boto3.client("cloudwatch", region_name=region, config=cw_config)
+        
+        dimensions = [
+            {"Name": "Environment", "Value": "production"},
+            {"Name": "Service", "Value": "budgetbot-backend"}
+        ]
+        if model_id:
+            dimensions.append({"Name": "ModelId", "Value": model_id})
+            
+        cw.put_metric_data(
+            Namespace="BudgetBot/AI",
+            MetricData=[
+                {
+                    "MetricName": metric_name,
+                    "Value": value,
+                    "Unit": unit,
+                    "Dimensions": dimensions
+                }
+            ]
+        )
+    except Exception as e:
+        print(f"[Metrics Warning] Skip emitting metric {metric_name}: {e}. Disabling future metrics (Circuit Breaker tripped).", flush=True)
+        _METRICS_ENABLED = False
 
 
 class BedrockAI:
