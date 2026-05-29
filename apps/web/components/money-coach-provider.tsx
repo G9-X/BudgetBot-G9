@@ -226,10 +226,16 @@ export function MoneyCoachProvider({
 
       if (email && password) {
         if (!clientId || !userPoolId) {
-          console.warn("AWS Cognito is not configured. Falling back to demo mode.")
-          window.localStorage.setItem(sessionKey, "signed-in")
-          setSignedIn(true)
-          return Promise.resolve()
+          if (email === "demo@example.com" && password === "password123") {
+            window.localStorage.setItem(sessionKey, "signed-in")
+            setSignedIn(true)
+            return Promise.resolve()
+          }
+          throw new Error(
+            locale === "vi"
+              ? "AWS Cognito chưa được cấu hình. Vui lòng thiết lập NEXT_PUBLIC_COGNITO_USER_POOL_ID và NEXT_PUBLIC_COGNITO_CLIENT_ID trong file .env hoặc sử dụng nút 'Dùng tài khoản demo'."
+              : "AWS Cognito is not configured. Please set NEXT_PUBLIC_COGNITO_USER_POOL_ID and NEXT_PUBLIC_COGNITO_CLIENT_ID in your .env file or use the 'Use demo account' button."
+          )
         }
 
         const poolData = { UserPoolId: userPoolId, ClientId: clientId }
