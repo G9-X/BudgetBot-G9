@@ -70,9 +70,15 @@ def _parse_base64_image(base64_str: str) -> tuple[bytes, str]:
     img_bytes = base64.b64decode(base64_str)
     return img_bytes, img_format
 
+_METRICS_ENABLED = True
+
 
 def _emit_ai_metric(metric_name: str, value: float, unit: str = "None", model_id: str = None):
-    """Emit custom AI metric to AWS CloudWatch with safe try-except block."""
+    """Emit custom AI metric to AWS CloudWatch with safe try-except block, environment bypass, and circuit breaker."""
+    global _METRICS_ENABLED
+    if not _METRICS_ENABLED or os.environ.get("DISABLE_CLOUDWATCH_METRICS") == "true":
+        return
+
     try:
         import boto3
         from botocore.config import Config
@@ -107,7 +113,8 @@ def _emit_ai_metric(metric_name: str, value: float, unit: str = "None", model_id
             ]
         )
     except Exception as e:
-        print(f"[Metrics Warning] Skip emitting metric {metric_name}: {e}", flush=True)
+        print(f"[Metrics Warning] Skip emitting metric {metric_name}: {e}. Disabling future metrics (Circuit Breaker tripped).", flush=True)
+        _METRICS_ENABLED = False
 
 
 class BedrockAI:
@@ -164,7 +171,7 @@ class BedrockAI:
             print(f"Bedrock Categorize Error: {exc}")
             return {"category": "Other", "confidence": 0.0}
 
-    def chat(self, user_id: str, question: str, image: str | None = None) -> dict:
+    def chat(self, user_id: str, question: str, image: str | None = None, session_id: str | None = None) -> dict:
         """AI Money Coach powered by Bedrock Converse API Tool Use (Client-managed RAG & Actions)."""
         
         # Multi-Layered Security Guardrail (Defense in Depth)
