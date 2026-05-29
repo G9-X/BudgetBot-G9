@@ -28,6 +28,8 @@
 ## 3. Architecture & Service Decisions
 
 ### Architecture Overview
+> ![Architecture Diagram](evidence_images/architecture/architecture.jpg)
+
 - **Frontend:** Next.js App Router + Tailwind CSS + shadcn/ui → Build tĩnh lưu trên **S3 Bucket**, phân phối qua **CloudFront** (HTTPS).
 - **Compute:** **API Gateway (HTTP API)** định tuyến request vào 2 **AWS Lambda functions** (Upload + Chat), chạy Python 3.11 trong Private Subnets.
 - **AI Feature:** Upload Lambda gọi **Amazon Bedrock (Nova Lite)** để phân loại giao dịch. Chat Lambda gọi **Amazon Bedrock (Llama 3.3 70B)** để trả lời câu hỏi tài chính.
