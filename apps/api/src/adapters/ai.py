@@ -73,8 +73,6 @@ def _parse_base64_image(base64_str: str) -> tuple[bytes, str]:
 _METRICS_ENABLED = True
 
 
-_METRICS_ENABLED = True
-
 
 def _emit_ai_metric(metric_name: str, value: float, unit: str = "None", model_id: str = None):
     """Emit custom AI metric to AWS CloudWatch with safe try-except block, environment bypass, and circuit breaker."""
