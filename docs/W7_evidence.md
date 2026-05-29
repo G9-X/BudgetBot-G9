@@ -15,8 +15,8 @@
 | 7 | Trọng Tấn | XB-DN26-152 |
 | 8 | Lê Trung Kiên | XB-DN26-045 |
 
-- **Live URL:** [Điền URL CloudFront — dạng https://xxxxxxx.cloudfront.net]
-- **GitHub Repo:** [Điền link Github]
+- **Live URL:** https://app.group9.id.vn
+- **GitHub Repo:** [Source Code](https://github.com/G9-X/BudgetBot-G9/tree/main) | [IaC](https://github.com/G9-X/Terraform_Hackathon)
 
 ## 2. Domain & Use Case
 - **Domain:** FinTech — AI Money Coach
