@@ -135,7 +135,7 @@ Respond with JSON only. No explanation.
 > ![VPC Endpoint Security Group](evidence_images/security/sg_vpce.png)
 
 ## 8. Monitoring (Optional Capability #8: Full Observability)
-- **Dashboard Screenshot:**![DashBoard](evidence_images/monitoring/Full_Observability/alarm/DashBoard.png)
+- **Dashboard Screenshot:**![dashBoard_Image](evidence_images/monitoring/Full_Observability/alarm/dashBoard_Image.png)
 - **Mục đích:** Cung cấp cái nhìn tổng quan về sức khỏe hệ thống, giúp trả lời nhanh 4 câu hỏi: Web có truy cập được không? Backend có khỏe không? AI có chậm/bị throttle không? Alarm có hoạt động không?
 - **Các Widgets và Tác dụng (Theo tài liệu Hướng dẫn Vận hành):**
   1. **App Health:** Theo dõi tỷ lệ thành công (`SuccessPercent`) và số lần thất bại (`Failed`) của CloudWatch Synthetics Canary. Giúp phát hiện ngay lập tức nếu Public Endpoint bị sập.
