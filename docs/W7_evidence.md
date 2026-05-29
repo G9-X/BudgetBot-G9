@@ -71,9 +71,14 @@ Respond with JSON only. No explanation.
 
 ## 6. Cost Evidence
 *3 ảnh Cost Explorer theo yêu cầu:*
-- [ ] Day 1 EOD: `docs/evidence_images/cost/day1_cost.png`
-- [ ] Day 2 EOD: `docs/evidence_images/cost/day2_cost.png`
-- [ ] Sáng Demo: `docs/evidence_images/cost/demo_cost.png`
+- [x] Day 1 EOD: `docs/evidence_images/cost/day1_cost.png`
+  ![Day 1 Cost](evidence_images/cost/day1_cost.png)
+- [x] Day 2 EOD: `docs/evidence_images/cost/day2_cost.png`
+  ![Day 2 Cost](evidence_images/cost/day2_cost.png)
+- [x] Sáng Demo: `docs/evidence_images/cost/demo_cost_1.png` & `demo_cost_2.png`
+  ![Demo Cost 1](evidence_images/cost/demo_cost_1.png)
+  ![Demo Cost 2](evidence_images/cost/demo_cost_2.png)
+
 
 **Top 3 Cost Drivers (Hackathon — us-west-2):**
 1. **RDS PostgreSQL (db.t3.micro Single-AZ):** ~$0.018/hour ≈ $13/tháng. Thành phần tốn kém nhất nhưng bắt buộc cho SQL aggregate.
@@ -311,7 +316,36 @@ Nhờ việc phân nhóm lỗi rõ ràng, quá trình gỡ lỗi (troubleshoot) 
 - Có thể teardown và redeploy toàn bộ hệ thống trong < 5 phút bằng `terraform destroy` + `terraform apply`.
 - **Evidence:** Repo `Terraform_Hackathon/` chứa toàn bộ modules tái sử dụng.
 
-## 10. Lessons Learned (~200 words)
+## 10. Web Application Demo
+*Ảnh chụp các màn hình chính của ứng dụng BudgetBot trên production (https://app.group9.id.vn).*
+
+### 10.1 Landing Page
+<!-- Ảnh trang chủ giới thiệu sản phẩm -->
+`docs/evidence_images/demo_web/landing_page.png`
+
+### 10.2 Login / Authentication
+<!-- Ảnh form đăng nhập Cognito SRP -->
+`docs/evidence_images/demo_web/login.png`
+
+### 10.3 Dashboard Overview
+<!-- Ảnh tổng quan chi tiêu theo tháng, biểu đồ tròn/cột -->
+`docs/evidence_images/demo_web/dashboard.png`
+
+### 10.4 Upload CSV & AI Categorization
+<!-- Ảnh upload file CSV và kết quả phân loại AI -->
+`docs/evidence_images/demo_web/upload_csv.png`
+
+### 10.5 Transaction List & Review
+<!-- Ảnh danh sách giao dịch, trạng thái NEEDS_REVIEW / AUTO_APPROVED -->
+`docs/evidence_images/demo_web/transactions.png`
+
+### 10.6 AI Money Coach (Chat)
+<!-- Ảnh giao diện chat với AI về tài chính -->
+`docs/evidence_images/demo_web/ai_chat.png`
+
+---
+
+## 11. Lessons Learned (~200 words)
 - **Bảo mật vs Chi phí:** Thiết kế VPC không có NAT Gateway buộc chúng tôi phải hiểu rõ cơ chế VPC Endpoints. Kết quả: tiết kiệm $32/tháng mà vẫn đảm bảo dữ liệu tài chính không bao giờ đi qua Internet công cộng. Bài học: "Secure by Design" không nhất thiết phải đắt.
 - **Hybrid AI Funnel:** Phụ thuộc 100% vào LLM cho mọi dòng giao dịch vừa tốn tiền vừa chậm. Tích hợp Rule Engine deterministic chạy trước AI giúp tối ưu cả chi phí lẫn tốc độ phản hồi — chỉ dùng "trí thông minh đắt tiền" cho những trường hợp thực sự mơ hồ.
 - **Ship, Don't Polish:** Trong hackathon 48h, chúng tôi đã mắc sai lầm ban đầu khi dành quá nhiều thời gian cho UI styling. Bài học rút ra: Backend chạy được + AI respond được = 80% điểm số. UI đẹp = 0% điểm số.
