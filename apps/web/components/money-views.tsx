@@ -761,6 +761,12 @@ function ImportStatement() {
           "CSV demo chỉ xử lý tối đa 5.000 dòng mỗi lần.",
           "Demo CSV import supports up to 5,000 rows at a time."
         )
+      case "DUPLICATE_FILE":
+        return text(
+          locale,
+          "Bạn đã upload file này trước đó rồi.",
+          "You have already uploaded this file before."
+        )
       default:
         return text(
           locale,

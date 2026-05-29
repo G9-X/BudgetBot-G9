@@ -204,16 +204,40 @@ Evidence images:
 ![AiFeatureDegraded](evidence_images/monitoring/Full_Observability/alarm/03_ai_feature_end_to_end_failure/Picture/AiFeatureDegraded.png)
 
 ### 8.2 Log Insights Query
-```sql
-fields @timestamp, @message, @logStream
-| filter @message like /ERROR|Exception|Task timed out/
-| sort @timestamp desc
-| limit 20
-```
+![log_insights](evidence_images/monitoring/Full_Observability/alarm/log_insights.png)
+#### Case 1: Public HTTPS App Unavailable (Recent Backend Errors)
+**Mục đích:** 
+Điều tra hệ thống khi nhận được cảnh báo `UserFacingCritical` (ứng dụng web không truy cập được). Truy vấn này lọc toàn bộ API Gateway và Lambda Logs để tìm các request bị lỗi (HTTP 5xx, Timeout, Exception). Mục đích cốt lõi là xác định nhanh `request_id`, `route` bị ảnh hưởng và phân biệt lỗi này là do định tuyến mạng (Public Routing) hay do backend/dependency bị sập.
 
-- **Cost Anomaly Detection:** Đã bật để tự động phát hiện chi phí bất thường.
-- **Budget Alert:** Đã thiết lập ngưỡng $80 để ngăn vượt $100 hard cap.
+**Kết quả:** 
+Truy vấn đã scan hàng trăm records trong vài giây và bắt được chính xác các request gây lỗi. Nhờ việc cài đặt `StructuredLoggingMiddleware` trong code, log được trả về dưới định dạng JSON rất sạch sẽ, hiển thị rõ `httpMethod`, `ip`, và đặc biệt là độ trễ `latency` cùng với `request_id`.
 
+**Đề xuất tiếp theo:** 
+Sử dụng `request_id` thu được từ bảng kết quả để trace (truy vết) xem request này đang gọi vào Route nào. Áp dụng Runbook điều tra để kiểm tra tài nguyên đích (Bedrock/DB) có đang bị quá tải hay sập không.
+![case1](evidence_images/monitoring/Full_Observability/alarm/case1.png)
+#### Case 2: Backend Compute Failure (Timeouts & Errors)
+**Mục đích:**
+Điều tra nguyên nhân gốc khi báo động `BackendComputeCritical` hoặc `ComputeDurationNearTimeout` kích hoạt. Truy vấn này quét qua log của các hàm Lambda (`budget-bot-chat` và `budget-bot-upload`) để lọc ra các log hệ thống dạng `REPORT`, `ERROR` hoặc các từ khóa "timeout", "exception", "throttle". Mục đích là xác định xem Lambda có bị sập do hết thời gian thực thi (timeout) hay cạn kiệt RAM (OutOfMemory) hay không.
+
+**Kết quả:**
+Bảng kết quả trả về hiển thị chính xác các log. Đáng chú ý nhất là hệ thống bắt được các bản ghi `REPORT` của Lambda `budget-bot-upload` với chỉ số `Duration: 30000.00 ms`. Điều này chứng minh Lambda đã chạm ngưỡng timeout cứng 30 giây (Max Timeout) và bị AWS ép buộc dừng (Force Kill), giải thích lý do vì sao request bị sập.
+
+**Đề xuất tiếp theo:**
+Kiểm tra chi tiết `request_id` của các tác vụ bị timeout 30 giây này. Nếu nguyên nhân do xử lý file CSV quá lớn hoặc gọi AI quá lâu, giải pháp là cấu hình tăng giới hạn Timeout của Lambda (lên 60s hoặc 90s) hoặc chuyển kiến trúc sang xử lý bất đồng bộ (như đẩy vào SQS).
+![case2](evidence_images/monitoring/Full_Observability/alarm/case2.png)
+
+#### Case 3: AI Feature End-to-End Failure (AI Metrics & Errors)
+**Mục đích:**
+Giám sát toàn diện trạng thái sức khỏe của tính năng gọi AI (Amazon Bedrock). Khác với các truy vấn tìm kiếm log đơn thuần, truy vấn này sử dụng hàm tổng hợp có điều kiện (`sum(if(...))`) để phân nhóm các lỗi AI thành 4 hạng mục cụ thể trong mỗi chu kỳ 5 phút (`bin(5m)`): Lỗi Fallback, Lỗi Quota/Throttle, Lỗi Timeout/Latency, và Lỗi Bedrock (Validation/AccessDenied).
+
+**Kết quả:**
+Bảng kết quả trả về hiển thị số lượng lỗi được gom nhóm rất trực quan. Theo như ảnh chụp, hệ thống không ghi nhận lỗi Fallback hay Quota, nhưng bắt được các sự kiện thuộc nhóm `latency_timeout_events` rải rác ở các khung giờ khác nhau. Điều này cho thấy model AI đang hoạt động bình thường về mặt logic và phân quyền, nhưng thỉnh thoảng gặp độ trễ cao khi xử lý suy luận.
+
+**Đề xuất tiếp theo:**
+Nhờ việc phân nhóm lỗi rõ ràng, quá trình gỡ lỗi (troubleshoot) trở nên cực kỳ nhanh chóng:
+- Nếu cột `quota_or_throttle_events` tăng cao: Cần cấu hình Exponential Backoff hoặc xin AWS tăng TPM/RPM quota.
+- Nếu cột `latency_timeout_events` (như trong hình) tăng cao: Cần cân nhắc chuyển sang model nhỏ hơn (như Haiku/Nova Lite) để phản hồi nhanh hơn, hoặc nới lỏng mức Timeout của API Gateway.
+![case3](evidence_images/monitoring/Full_Observability/alarm/case3.png)
 ## 6.5 Measurement & Decisions
 
 ### DECISION 1: Chọn Amazon Nova Lite cho phân loại giao dịch (Upload Lambda)
