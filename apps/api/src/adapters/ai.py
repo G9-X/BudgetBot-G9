@@ -171,7 +171,7 @@ class BedrockAI:
             print(f"Bedrock Categorize Error: {exc}")
             return {"category": "Other", "confidence": 0.0}
 
-    def chat(self, user_id: str, question: str, image: str | None = None) -> dict:
+    def chat(self, user_id: str, question: str, image: str | None = None, session_id: str | None = None) -> dict:
         """AI Money Coach powered by Bedrock Converse API Tool Use (Client-managed RAG & Actions)."""
         
         # Multi-Layered Security Guardrail (Defense in Depth)
