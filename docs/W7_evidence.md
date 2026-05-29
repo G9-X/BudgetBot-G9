@@ -99,14 +99,23 @@ Respond with JSON only. No explanation.
   - Upload Lambda role: `s3:PutObject` + `s3:GetObject` trên ARN bucket csv-data cụ thể, `bedrock:InvokeModel` trên ARN `amazon.nova-*`.
   - Chat Lambda role: `bedrock:InvokeModel` trên ARN `meta.llama3-*`.
   - Không sử dụng wildcard `*` cho actions.
+  > ![IAM Upload Lambda Role](evidence_images/security/iam_upload_lambda.png)
+  > ![IAM Chat Lambda Role](evidence_images/security/iam_chat_lambda.png)
 - **Network Isolation:**
   - RDS: Không bật Public Access. Nằm trong private-db subnets. Security Group chỉ cho phép inbound port 5432 từ Lambda Security Group.
+  > ![RDS No Public Access](evidence_images/security/rds_no_public_access.png)
   - Lambda: Nằm trong private-app subnets. Không có Public Subnet trong toàn bộ VPC.
   - Không có NAT Gateway → dùng S3 Gateway Endpoint (miễn phí) + Bedrock Interface Endpoint.
+  > ![VPC Endpoints & No NAT](evidence_images/security/vpc_endpoints_no_nat.png)
 - **S3 Encryption:** Tất cả bucket đều bật Server-Side Encryption (SSE-S3 AES256) mặc định. Block Public Access bật toàn bộ 4 flags (`block_public_acls`, `block_public_policy`, `ignore_public_acls`, `restrict_public_buckets`).
+  > ![S3 Block Public Access](evidence_images/security/s3_block_public_access.png)
+  > ![S3 Default Encryption](evidence_images/security/s3_default_encryption.png)
 - **Cognito:** User Pool + Web Client đã provisioned (Terraform module). Authorizer tạm tắt cho demo.
+  > ![Cognito User Pool](evidence_images/security/cognito_user_pool.png)
 - **Secrets Manager:** Thông tin kết nối RDS (username, password, host, port) được lưu trữ trong AWS Secrets Manager, không hardcode trong code.
+  > ![Secrets Manager](evidence_images/security/secrets_manager.png)
 - **MFA:** Đã bật MFA cho tài khoản AWS root.
+  > ![Root MFA](evidence_images/security/root_mfa.png)
 
 ### Security Group Audit
 | Security Group | Inbound Rule | Outbound Rule | Đánh giá |
@@ -114,6 +123,9 @@ Respond with JSON only. No explanation.
 | `budget-bot-rds-sg` | Port 5432 TCP — chỉ từ Lambda SG (dùng `security_groups`, KHÔNG dùng CIDR) | Không có egress rule — DB không cần gửi bất kỳ kết nối ra ngoài | ✅ Zero-trust |
 | `budget-bot-lambda-sg` | Không có ingress rule | All outbound (cần để gọi VPC Endpoint + RDS) | ✅ Chuẩn — API Gateway gọi Lambda qua AWS internal invoke, không qua VPC |
 | `budget-bot-vpce-sg` | Port 443 TCP — chỉ từ VPC CIDR `10.0.0.0/16` | All traffic | ✅ Chỉ cho phép HTTPS nội bộ VPC |
+> ![RDS Security Group](evidence_images/security/sg_rds.png)
+> ![Lambda Security Group](evidence_images/security/sg_lambda.png)
+> ![VPC Endpoint Security Group](evidence_images/security/sg_vpce.png)
 
 ## 8. Monitoring (Optional Capability #8: Full Observability)
 
